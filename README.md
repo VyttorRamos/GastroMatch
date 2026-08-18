@@ -374,7 +374,7 @@ Armazenamento e distribuição de vídeos e materiais digitais.
 - Vyttor Gabriel Ramos Camillo
 - Yasmin Siqueira Lobo
 
-**Instituição:** SENAI — Tecnologia da Informação / Santa Catarina.
+**Instituição:** SENAI Félix Guisard
 
 ---
 
