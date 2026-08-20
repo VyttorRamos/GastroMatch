@@ -1,6 +1,9 @@
 import Icon from "./Icon";
+import { useAuth } from "../services/AuthContext";
 
-export default function Header({ search, setSearch, menuOpen, setMenuOpen }) {
+export default function Header({ search, setSearch, menuOpen, setMenuOpen, onAuth }) {
+  const { user, logout } = useAuth();
+
   return (
     <header className="header">
       <div className="container header-inner">
@@ -22,13 +25,22 @@ export default function Header({ search, setSearch, menuOpen, setMenuOpen }) {
         <nav className={`nav ${menuOpen ? "open" : ""}`}>
           <a href="#receitas">Explorar</a>
           <a href="#receitas">Minhas receitas</a>
+
           <button className="icon-button" aria-label="Sacola">
             <Icon name="bag" size={19} />
             <span className="cart-dot">0</span>
           </button>
-          <button className="button button-small" onClick={() => alert("Login em breve!")}>
-            Entrar
-          </button>
+
+          {user ? (
+            <div className="user-area">
+              <span className="user-name">Olá, {user.name.split(" ")[0]}</span>
+              <button className="button button-small" onClick={logout}>Sair</button>
+            </div>
+          ) : (
+            <button className="button button-small" onClick={() => onAuth("login")}>
+              Entrar
+            </button>
+          )}
         </nav>
 
         <button

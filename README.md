@@ -50,149 +50,109 @@ Desenvolver uma plataforma que conecte consumidores a chefs e restaurantes, perm
 
 ## 3. Funcionalidades
 
-### MVP — obrigatórias
+### MVP
 
-- [ ] Cadastro e login;
-- [ ] Perfis de usuários e criadores;
-- [ ] Validação de chef/restaurante;
-- [ ] Catálogo e busca de receitas;
-- [ ] Publicação e acesso às receitas;
-- [ ] Venda de conteúdos digitais;
-- [ ] Vídeos e materiais das receitas;
-- [ ] Avaliações;
-- [ ] Controle de acesso;
-- [ ] Geolocalização dos kits;
-- [ ] Gestão básica de pedidos;
-- [ ] Proteção dos conteúdos.
+- [x] Cadastro e login;
+- [x] Autenticação utilizando JWT;
+- [x] Controle de acesso;
+- [x] Perfis de usuários e criadores;
+- [x] Catálogo de receitas;
+- [x] Busca de receitas;
+- [x] Categorias;
+- [x] Avaliações;
+- [x] Favoritos;
+- [x] Gestão básica de pedidos;
 
-### Desejáveis
+### Arquitetura planejada
 
-- [ ] Assinatura mensal;
-- [ ] Comunidade avançada;
-- [ ] Recomendações personalizadas por IA;
-- [ ] Integração com delivery;
-- [ ] Notificações;
-- [ ] Cupons;
-- [ ] Analytics para restaurantes;
-- [ ] Lista de compras automática;
-- [ ] Recursos de Realidade Aumentada durante o preparo.
-
----
-
-## 4. Fora do escopo do MVP
-
-- Operação própria de delivery;
-- Produção/fabricação dos alimentos;
-- Gestão completa de estoque dos restaurantes;
-- Marketplace de equipamentos gastronômicos;
-- Expansão internacional;
-- Atendimento médico/nutricional especializado.
-
----
-
-## 5. Tecnologias
-
-| Camada | Tecnologia |
-|---|---|
-| Frontend Web | React / Next.js |
-| Aplicação Mobile | Flutter / React Native |
-| Backend | Node.js / NestJS ou Java / Spring |
-| Banco de dados | PostgreSQL |
-| Autenticação | JWT |
-| Armazenamento | Serviço de objetos |
-| Vídeos | Cloud + CDN |
-| Mapas | APIs de mapas/geolocalização |
-| Pagamentos | Gateway de pagamento |
-| Delivery | API/serviço externo |
-
----
-
-## 6. Arquitetura planejada
+Futuramente, a arquitetura poderá ser expandida para:
 
 ```text
-                    USUÁRIO
-                       |
-                       v
-             +--------------------+
-             | Frontend Web/Mobile|
-             | React / React Native|
-             +---------+----------+
-                       |
-                       v
-             +--------------------+
-             |        API         |
-             | Node/Nest ou Java  |
-             +---------+----------+
-                       |
-          +------------+------------+
-          |            |            |
-          v            v            v
-     PostgreSQL     Storage      APIs externas
-                    Vídeos/PDF   Pagamento
-                                 Mapas
-                                 Delivery
+                         USUÁRIO
+                            |
+              +-------------+-------------+
+              |                           |
+              v                           v
+       Frontend Web                Aplicação Mobile
+        React/Vite                 React Native
+              |                           |
+              +-------------+-------------+
+                            |
+                            v
+                     Backend / API
+                            |
+          +-----------------+-----------------+
+          |                 |                 |
+          v                 v                 v
+      PostgreSQL         Storage          APIs externas
+                         Vídeos/PDF       Pagamento
+                                          Mapas
+                                          Delivery
 ```
 
 ---
 
-## 7. Estrutura atual do Frontend
+# 7. Estrutura do projeto
+
+O projeto possui frontend e backend separados.
 
 ```text
-gastromatch-frontend/
+GastroMatch/
 │
-├── public/
+├── gastromatch-frontend/
+│   │
+│   ├── public/
+│   │
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Header.jsx
+│   │   │   ├── RecipeCard.jsx
+│   │   │   ├── Stats.jsx
+│   │   │   ├── Footer.jsx
+│   │   │   └── AuthModal.jsx
+│   │   │
+│   │   ├── services/
+│   │   │   ├── api.js
+│   │   │   └── AuthContext.jsx
+│   │   │
+│   │   ├── styles/
+│   │   │   └── global.css
+│   │   │
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   │
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.js
+│   └── .env
 │
-├── src/
-│   ├── components/
-│   │   ├── Header.jsx
-│   │   ├── RecipeCard.jsx
-│   │   ├── Stats.jsx
-│   │   └── Footer.jsx
+├── gastromatch-backend/
 │   │
-│   ├── pages/
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   └── seed.js
 │   │
-│   ├── styles/
-│   │   └── global.css
+│   ├── src/
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── middleware/
+│   │   ├── routes/
+│   │   └── server.js
 │   │
-│   ├── App.jsx
-│   └── main.jsx
+│   ├── package.json
+│   ├── .env
+│   └── README.md
 │
-├── index.html
-├── package.json
-├── vite.config.js
 └── README.md
 ```
 
-### Componentes principais
-
-**Header**
-- Logo;
-- Busca;
-- Navegação;
-- Login;
-- Sacola;
-- Menu responsivo.
-
-**RecipeCard**
-- Imagem;
-- Nome da receita;
-- Chef/restaurante;
-- Preço;
-- Avaliação;
-- Tempo;
-- Dificuldade.
-
-**Stats**
-- Indicadores da plataforma.
-
-**Footer**
-- Navegação;
-- Informações institucionais;
-- Links legais.
-
 ---
 
-## 8. Frontend inicial
+# 8. Frontend
+
+O frontend inicial foi desenvolvido utilizando **React + Vite**, com foco em uma interface simples, responsiva e preparada para integração com a API.
+
+### Página inicial
 
 A página inicial possui:
 
@@ -205,32 +165,325 @@ A página inicial possui:
 - Footer;
 - Layout responsivo.
 
-O frontend inicial funciona como base visual para a integração posterior com o backend.
+### Componentes principais
+
+#### Header
+
+Responsável por:
+
+- Logo;
+- Campo de busca;
+- Navegação;
+- Login;
+- Usuário autenticado;
+- Logout;
+- Sacola;
+- Menu responsivo.
+
+#### RecipeCard
+
+Apresenta:
+
+- Imagem;
+- Nome da receita;
+- Chef/restaurante;
+- Preço;
+- Avaliação;
+- Número de avaliações;
+- Tempo de preparo;
+- Dificuldade.
+
+#### Stats
+
+Apresenta indicadores da plataforma.
+
+#### Footer
+
+Apresenta:
+
+- Navegação;
+- Informações institucionais;
+- Links legais.
+
+#### AuthModal
+
+Responsável pela interface de:
+
+- Login;
+- Cadastro;
+- Escolha do tipo de usuário;
+- Tratamento de erros de autenticação.
 
 ---
 
-## 9. Como executar
+# 9. Integração Frontend + Backend
 
-### Pré-requisitos
+O frontend já está conectado ao backend por meio de uma API REST.
+
+A URL da API é configurada através da variável:
+
+```env
+VITE_API_URL=http://localhost:3000/api
+```
+
+### Autenticação
+
+O fluxo de autenticação funciona da seguinte forma:
+
+```text
+Usuário
+   |
+   v
+Tela de Login
+   |
+   v
+POST /api/auth/login
+   |
+   v
+Backend
+   |
+   v
+Validação da senha
+   |
+   v
+JWT
+   |
+   v
+Frontend
+   |
+   v
+localStorage
+```
+
+O token JWT é utilizado nas requisições que necessitam de autenticação.
+
+### Funcionalidades integradas
+
+- Login;
+- Cadastro;
+- Logout;
+- Recuperação do usuário autenticado;
+- JWT;
+- Receitas;
+- Busca;
+- Favoritos;
+- Avaliações;
+- Pedidos.
+
+---
+
+# 10. Backend
+
+O backend foi desenvolvido utilizando:
+
+- Node.js;
+- Express;
+- Prisma;
+- PostgreSQL;
+- JWT;
+- bcrypt.
+
+O servidor disponibiliza uma API REST responsável pela comunicação entre o frontend e o banco de dados.
+
+### Estrutura
+
+```text
+gastromatch-backend/
+│
+├── prisma/
+│   ├── schema.prisma
+│   └── seed.js
+│
+├── src/
+│   ├── config/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── routes/
+│   └── server.js
+│
+├── .env
+├── package.json
+└── README.md
+```
+
+### Servidor
+
+O backend é executado atualmente em:
+
+```text
+http://localhost:3000
+```
+
+Ao iniciar corretamente, a API apresenta:
+
+```text
+GastroMatch API rodando em http://localhost:3000
+```
+
+---
+
+# 11. Banco de dados
+
+O banco utiliza **PostgreSQL**, com o gerenciamento das tabelas realizado pelo **Prisma ORM**.
+
+O banco é responsável por armazenar informações como:
+
+- Usuários;
+- Autenticação;
+- Perfis de chefs;
+- Receitas;
+- Categorias;
+- Avaliações;
+- Favoritos;
+- Pedidos;
+- Dados relacionados aos conteúdos gastronômicos.
+
+### Prisma
+
+O schema do banco está localizado em:
+
+```text
+gastromatch-backend/prisma/schema.prisma
+```
+
+Para sincronizar o schema com o banco:
+
+```bash
+npx prisma db push
+```
+
+Para gerar o cliente Prisma:
+
+```bash
+npx prisma generate
+```
+
+---
+
+# 12. Usuários de teste
+
+O backend possui usuários de teste para facilitar o desenvolvimento.
+
+### Administrador
+
+```text
+Email: admin@gastromatch.com
+Senha: 123456
+```
+
+### Chef
+
+```text
+Email: chef@gastromatch.com
+Senha: 123456
+```
+
+Esses usuários são utilizados apenas para testes durante o desenvolvimento.
+
+---
+
+# 13. Configuração do ambiente
+
+## Pré-requisitos
 
 - Node.js;
 - npm;
+- PostgreSQL;
 - Visual Studio Code, recomendado.
 
-### Instalação
+---
+
+# 14. Configuração do Backend
+
+Entre na pasta:
 
 ```bash
-cd gastromatch-frontend
+cd gastromatch-backend
+```
+
+Instale as dependências:
+
+```bash
 npm install
 ```
 
-### Desenvolvimento
+Crie o arquivo:
+
+```text
+.env
+```
+
+Exemplo:
+
+```env
+DATABASE_URL="postgresql://postgres:SUA_SENHA@localhost:5432/gastromatch?schema=public"
+JWT_SECRET="gastromatch-chave-secreta"
+JWT_EXPIRES_IN="7d"
+PORT=3000
+FRONTEND_URL="http://localhost:5173"
+```
+
+> A senha do PostgreSQL deve ser substituída pela senha definida durante a instalação do PostgreSQL.
+
+Gere o Prisma Client:
+
+```bash
+npx prisma generate
+```
+
+Sincronize o banco:
+
+```bash
+npx prisma db push
+```
+
+Execute o seed:
+
+```bash
+npm run db:seed
+```
+
+Inicie o servidor:
 
 ```bash
 npm run dev
 ```
 
-Depois acesse o endereço informado pelo Vite, normalmente:
+---
+
+# 15. Configuração do Frontend
+
+Entre na pasta:
+
+```bash
+cd gastromatch-frontend
+```
+
+Instale as dependências:
+
+```bash
+npm install
+```
+
+Crie o arquivo:
+
+```text
+.env
+```
+
+Com:
+
+```env
+VITE_API_URL=http://localhost:3000/api
+```
+
+Execute:
+
+```bash
+npm run dev
+```
+
+O frontend será disponibilizado normalmente em:
 
 ```text
 http://localhost:5173
@@ -238,77 +491,154 @@ http://localhost:5173
 
 > O projeto deve ser executado pelo Vite. Não abra o `index.html` diretamente no navegador.
 
-### Produção
+---
+
+# 16. Executando o projeto completo
+
+Para executar o GastroMatch localmente, são necessários dois terminais.
+
+### Terminal 1 — Backend
+
+```bash
+cd gastromatch-backend
+npm run dev
+```
+
+Resultado esperado:
+
+```text
+GastroMatch API rodando em http://localhost:3000
+```
+
+### Terminal 2 — Frontend
+
+```bash
+cd gastromatch-frontend
+npm run dev
+```
+
+Depois acesse:
+
+```text
+http://localhost:5173
+```
+
+---
+
+# 17. Produção
+
+### Frontend
+
+Gerar a build:
 
 ```bash
 npm run build
 ```
 
-### Pré-visualização da build
+Pré-visualizar:
 
 ```bash
 npm run preview
 ```
 
----
+### Backend
 
-## 10. Banco de dados
-
-O banco de dados planejado utiliza **PostgreSQL**.
-
-Principais informações:
-
-- Usuários e autenticação;
-- Perfis de chefs e restaurantes;
-- Documentos para validação;
-- CNPJ e dados do estabelecimento;
-- Receitas;
-- Ingredientes e quantidades;
-- Porções;
-- Dificuldade e tempo;
-- Vídeos e materiais digitais;
-- Avaliações e comentários;
-- Localização;
-- Catálogo e estoque dos kits;
-- Preços;
-- Pedidos e pagamentos;
-- Informações de entrega;
-- Registros de conformidade sanitária.
+O backend poderá ser executado em um servidor ou serviço de nuvem, utilizando as variáveis de ambiente de produção.
 
 ---
 
-## 11. Segurança
+# 18. Segurança
 
-A plataforma deverá considerar:
+A plataforma considera mecanismos de segurança como:
 
 - Autenticação com JWT;
-- Criptografia;
+- Senhas protegidas com bcrypt;
 - Controle de acesso;
-- Proteção de conteúdos;
+- Middleware de autenticação;
+- Proteção das rotas privadas;
+- Proteção dos dados dos usuários;
+- Validação de informações recebidas pela API.
+
+### Segurança planejada
+
+Futuramente poderão ser adicionados:
+
 - Marca d'água;
-- Mecanismos de proteção contra download;
+- Proteção avançada contra download;
 - Validação de chefs e restaurantes;
-- Proteção dos dados dos usuários.
+- Rate limiting;
+- Logs de segurança;
+- Proteção avançada dos conteúdos;
+- Monitoramento da aplicação.
 
 ---
 
-## 12. Integrações
+# 19. Integrações planejadas
 
 ### Pagamentos
-Processamento das compras de receitas, aulas e kits.
+
+Processamento das compras de:
+
+- Receitas;
+- Videoaulas;
+- Kits de ingredientes;
+- Assinaturas.
 
 ### Mapas e geolocalização
-Verificação da disponibilidade de kits dentro do raio permitido.
+
+Utilizados para verificar a disponibilidade dos kits dentro do raio permitido.
 
 ### Delivery
+
 Integração futura para entrega dos kits.
 
 ### Storage e CDN
-Armazenamento e distribuição de vídeos e materiais digitais.
+
+Armazenamento e distribuição de:
+
+- Vídeos;
+- PDFs;
+- Imagens;
+- Outros materiais digitais.
 
 ---
 
-## 13. Riscos
+# 20. AWS Academy
+
+A infraestrutura em nuvem faz parte das próximas etapas do projeto.
+
+A arquitetura planejada é:
+
+```text
+                    INTERNET
+                       |
+                       v
+              +----------------+
+              |    Frontend    |
+              |      AWS       |
+              +-------+--------+
+                      |
+                      v
+              +----------------+
+              |    Backend     |
+              |      AWS       |
+              +-------+--------+
+                      |
+          +-----------+-----------+
+          |                       |
+          v                       v
+    PostgreSQL                 Storage
+      AWS                     AWS Cloud
+          |
+          v
+    Dados do sistema
+```
+
+A implantação será realizada posteriormente utilizando os recursos disponíveis na AWS Academy.
+
+---
+
+# 21. Riscos
 
 - Fraude na validação de chefs/restaurantes;
 - Pirataria de conteúdo;
@@ -321,7 +651,7 @@ Armazenamento e distribuição de vídeos e materiais digitais.
 
 ---
 
-## 14. Possíveis evoluções
+# 22. Possíveis evoluções
 
 - Sistema de recomendação com IA;
 - Aplicativo mobile;
@@ -337,53 +667,97 @@ Armazenamento e distribuição de vídeos e materiais digitais.
 
 ---
 
-## 15. Status do projeto
+# 23. Status do projeto
 
-### Concluído no frontend inicial
+## Concluído
 
-- [x] Estrutura inicial do frontend;
-- [x] Página inicial;
-- [x] Header;
-- [x] Busca de receitas;
-- [x] Cards de receitas;
-- [x] Estatísticas;
-- [x] Seção "Como funciona";
-- [x] CTA de cadastro;
-- [x] Footer;
-- [x] Responsividade inicial.
+### Frontend
 
-### Próximas etapas
+- Estrutura inicial do frontend;
+- Página inicial;
+- Header;
+- Busca de receitas;
+- Cards de receitas;
+- Estatísticas;
+- Seção "Como funciona";
+- CTA de cadastro;
+- Footer;
+- Responsividade inicial;
+- Integração com API;
+- Tela de login;
+- Tela de cadastro;
+- Logout;
+- Persistência da autenticação.
 
-- [ ] Backend;
-- [ ] Banco de dados;
-- [ ] Autenticação;
-- [ ] Cadastro de chefs;
-- [ ] Catálogo real;
-- [ ] Página de detalhes da receita;
-- [ ] Pagamentos;
-- [ ] Kits de ingredientes;
-- [ ] Integrações externas.
+### Backend
+
+- Estrutura do servidor;
+- API REST;
+- Node.js + Express;
+- Prisma;
+- PostgreSQL;
+- JWT;
+- bcrypt;
+- Cadastro;
+- Login;
+- Controle de autenticação;
+- Usuário autenticado;
+- Receitas;
+- Categorias;
+- Avaliações;
+- Favoritos;
+- Pedidos;
+- Seed de dados para testes.
+
+### Banco de dados
+
+- PostgreSQL instalado;
+- Banco GastroMatch criado;
+- Prisma configurado;
+- Schema definido;
+- Integração com backend.
 
 ---
 
-## 16. Equipe
+# 24. Próximas etapas
+
+- Página completa de detalhes da receita;
+- Validação de chefs/restaurantes;
+- Publicação de receitas pelo chef;
+- Sistema de compra de conteúdos;
+- Vídeos e materiais digitais;
+- Kits de ingredientes;
+- Geolocalização;
+- Gateway de pagamento;
+- Storage para arquivos;
+- Integração com delivery;
+- Aplicação mobile;
+- Deploy na AWS Academy;
+- Monitoramento da aplicação;
+- Testes automatizados.
+
+---
+
+# 25. Equipe
 
 **Projeto:** Conexão e Experiência Gastronômica (GastroMatch)
 
-- Luis Otavio de Deus dos Santos
-- Vyttor Gabriel Ramos Camillo
-- Yasmin Siqueira Lobo
+- Luis Otavio de Deus dos Santos;
+- Vyttor Gabriel Ramos Camillo;
+- Yasmin Siqueira Lobo.
 
 **Instituição:** SENAI Félix Guisard
 
 ---
 
-## 17. Referência da proposta
+# 26. Referência da proposta
 
-O projeto foi desenvolvido a partir da proposta **Conexão e Experiência Gastronômica (GastroMatch)**, que apresenta o problema, público, fluxo de utilização, requisitos, tecnologias, riscos e escopo do MVP.
+O projeto foi desenvolvido a partir da proposta **Conexão e Experiência Gastronômica (GastroMatch)**, que apresenta o problema, público-alvo, fluxo de utilização, requisitos, tecnologias, riscos e escopo do MVP.
 
 ---
 
-## Licença
+# Licença
 
-Projeto acadêmico em desenvolvimento. A definição de uma licença de software poderá ser realizada posteriormente conforme a finalidade do projeto.
+Projeto acadêmico em desenvolvimento.
+
+A definição de uma licença de software poderá ser realizada posteriormente conforme a finalidade do projeto.
