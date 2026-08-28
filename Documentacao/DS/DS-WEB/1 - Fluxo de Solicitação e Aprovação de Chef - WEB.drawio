@@ -1,12 +1,12 @@
 <mxfile host="app.diagrams.net">
   <diagram name="Página-1" id="tNl6h8gHUb_Vn_snBJpy">
-    <mxGraphModel dx="1414" dy="743" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1471" dy="803" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <UserObject label="" mermaidData="{&#xa;  &quot;data&quot;: &quot;sequenceDiagram\n    autonumber\n    actor U as Usuário (Web)\n    participant API as Backend API (Node.js)\n    participant DB as Banco de Dados (Prisma)\n    participant Mail as Serviço de Email\n    actor A as Admin (Web)\n\n    U-&gt;&gt;API: POST /api/chefs/apply { displayName, cnpj, docs }\n    activate API\n    API-&gt;&gt;DB: Cria \&quot;Chef\&quot; (status: PENDING) e \&quot;ChefDocument\&quot;\n    activate DB\n    DB--&gt;&gt;API: Confirma submissão\n    deactivate DB\n    API--&gt;&gt;U: Retorna 201 Created (Em análise)\n    deactivate API\n\n    Note over U, A: Dias depois, na área administrativa...\n\n    A-&gt;&gt;API: PUT /api/chefs/{id}/approve + Token Admin\n    activate API\n    API-&gt;&gt;DB: Atualiza \&quot;Chef\&quot; (status: APPROVED)\n    API-&gt;&gt;DB: Atualiza \&quot;User\&quot; (role: CHEF)\n    activate DB\n    DB--&gt;&gt;API: Confirma atualização\n    deactivate DB\n    API-&gt;&gt;Mail: POST Dispara email de boas-vindas\n    activate Mail\n    Mail--&gt;&gt;U: Entrega email \&quot;Conta de Chef Aprovada\&quot;\n    deactivate Mail\n    API--&gt;&gt;A: Retorna 200 OK\n    deactivate API&quot;,&#xa;  &quot;config&quot;: null&#xa;}" id="D3H9yPQnHZUQDlA0Cue2-1">
           <mxCell connectable="0" parent="1" style="group;transparentBounds=1;editIcon=1;lockedGroup=0;groupPadding=10;" vertex="1">
-            <mxGeometry as="geometry" />
+            <mxGeometry height="739" width="1010" as="geometry" />
           </mxCell>
         </UserObject>
         <UserObject label="Usuário (Web)" mermaidId="n:U" mermaidBaseStyle="html=1;shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};lifelineDashed=0;strokeWidth=2;rounded=1;absoluteArcSize=1;arcSize=6;lifelineColor=light-dark(#9370DB,#cccccc);participant=seqActorStick;verticalAlign=bottom;align=center;spacingBottom=4;size=90;lifelineMirror=1;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Usuário (Web)" id="D3H9yPQnHZUQDlA0Cue2-2">
@@ -208,6 +208,12 @@
             <mxGeometry height="40" width="1250" x="85" y="281" as="geometry" />
           </mxCell>
         </UserObject>
+        <mxCell id="G7hwbFEAjx0AwDPUlafr-1" parent="D3H9yPQnHZUQDlA0Cue2-1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#dae8fc;strokeColor=#A680B8;strokeWidth=2;" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Banco de Dados&lt;br&gt;(Prisma)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="170" x="827" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="G7hwbFEAjx0AwDPUlafr-2" parent="D3H9yPQnHZUQDlA0Cue2-1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#dae8fc;strokeColor=#A680B8;strokeWidth=2;" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Banco de Dados&lt;br&gt;(Prisma)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="170" x="830" y="639" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>

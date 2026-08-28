@@ -1,12 +1,12 @@
 <mxfile host="app.diagrams.net">
   <diagram name="Página-1" id="HwXompojU9yHnsQqYXcZ">
-    <mxGraphModel dx="2491" dy="874" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="2412" dy="865" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <UserObject label="" mermaidData="{&#xa;  &quot;data&quot;: &quot;sequenceDiagram\n    autonumber\n    actor U as Usuário (App)\n    participant API as Backend API (Node.js)\n    participant DB as Banco de Dados (Prisma)\n\n    U-&gt;&gt;API: POST /api/orders { items, total } + Token JWT\n    activate API\n    API-&gt;&gt;API: Valida Token JWT\n    API-&gt;&gt;DB: Inicia Transação (Transaction)\n    activate DB\n    DB-&gt;&gt;DB: Cria registro em \&quot;Order\&quot; (status: PENDING)\n    DB-&gt;&gt;DB: Cria registros em \&quot;OrderItem\&quot;\n    DB--&gt;&gt;API: Confirma criação do pedido\n    deactivate DB\n    API--&gt;&gt;U: Retorna 201 Created { orderId }\n    deactivate API\n    U-&gt;&gt;U: Limpa carrinho e exibe tela de sucesso&quot;,&#xa;  &quot;config&quot;: null&#xa;}" id="bY0Aq3XmrHQ_LJSqPC_6-1">
           <mxCell connectable="0" parent="1" style="group;transparentBounds=1;editIcon=1;lockedGroup=0;groupPadding=10;" vertex="1">
-            <mxGeometry as="geometry" />
+            <mxGeometry height="840" width="867" as="geometry" />
           </mxCell>
         </UserObject>
         <UserObject label="Usuário (App)" mermaidId="n:U" mermaidBaseStyle="html=1;shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;edgeStyle&quot;:&quot;elbowEdgeStyle&quot;,&quot;elbow&quot;:&quot;vertical&quot;,&quot;curved&quot;:0,&quot;rounded&quot;:0};lifelineDashed=0;strokeWidth=2;rounded=1;absoluteArcSize=1;arcSize=6;lifelineColor=light-dark(#9370DB,#cccccc);participant=seqActorStick;verticalAlign=bottom;align=center;spacingBottom=4;size=90;lifelineMirror=1;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Usuário (App)" id="bY0Aq3XmrHQ_LJSqPC_6-2">
@@ -161,6 +161,12 @@
         </mxCell>
         <mxCell id="bY0Aq3XmrHQ_LJSqPC_6-26" parent="bY0Aq3XmrHQ_LJSqPC_6-1" style="ellipse;aspect=fixed;fillColor=light-dark(#333333,#cccccc);align=center;verticalAlign=middle;fontColor=light-dark(#FFFFFF,#333333);fontSize=12;" value="8" vertex="1">
           <mxGeometry height="20" width="20" x="120" y="698" as="geometry" />
+        </mxCell>
+        <mxCell id="IRO__rtcLO7dmglKCpJh-1" parent="bY0Aq3XmrHQ_LJSqPC_6-1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#dae8fc;strokeColor=#A680B8;strokeWidth=2;" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Banco de Dados&lt;br&gt;(Prisma)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="170" x="687" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="IRO__rtcLO7dmglKCpJh-2" parent="bY0Aq3XmrHQ_LJSqPC_6-1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#dae8fc;strokeColor=#A680B8;strokeWidth=2;" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Banco de Dados&lt;br&gt;(Prisma)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="170" x="687" y="740" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
