@@ -1,7 +1,7 @@
 import Icon from "./Icon";
 import { useAuth } from "../services/AuthContext";
 
-export default function Header({ search, setSearch, menuOpen, setMenuOpen, onAuth }) {
+export default function Header({ search, setSearch, menuOpen, setMenuOpen, onAuth, cartCount = 0, onOpenCart, onOpenChefModal }) {
   const { user, logout } = useAuth();
 
   return (
@@ -17,18 +17,20 @@ export default function Header({ search, setSearch, menuOpen, setMenuOpen, onAut
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Busque receitas, chefs..."
+            placeholder="Busque receitas, chefs, categorias..."
             aria-label="Buscar receitas"
           />
         </div>
 
         <nav className={`nav ${menuOpen ? "open" : ""}`}>
           <a href="#receitas">Explorar</a>
-          <a href="#receitas">Minhas receitas</a>
+          <button className="text-nav-btn" onClick={onOpenChefModal}>
+            Seja um Chef
+          </button>
 
-          <button className="icon-button" aria-label="Sacola">
+          <button className="icon-button" onClick={onOpenCart} aria-label="Sacola">
             <Icon name="bag" size={19} />
-            <span className="cart-dot">0</span>
+            <span className="cart-dot">{cartCount}</span>
           </button>
 
           {user ? (

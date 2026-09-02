@@ -5,7 +5,7 @@ function formatPrice(value) {
   return Number(value).toFixed(2).replace(".", ",");
 }
 
-export default function RecipeCard({ recipe }) {
+export default function RecipeCard({ recipe, onSelect }) {
   const rating = recipe.rating ?? "—";
   const reviews = recipe.reviews ?? recipe._count?.reviews ?? 0;
   const time = recipe.time ?? `${recipe.prepTime ?? 0} min`;
@@ -15,7 +15,7 @@ export default function RecipeCard({ recipe }) {
   const image = recipe.imageUrl || recipe.image;
 
   return (
-    <article className="recipe-card">
+    <article className="recipe-card" onClick={() => onSelect && onSelect(recipe)}>
       <div className="recipe-image">
         {image ? (
           <img src={image} alt={recipe.title} loading="lazy" />
@@ -35,7 +35,7 @@ export default function RecipeCard({ recipe }) {
           <span>{difficulty}</span>
         </div>
 
-        <button className="recipe-button">
+        <button className="recipe-button" onClick={(e) => { e.stopPropagation(); onSelect && onSelect(recipe); }}>
           Ver receita <Icon name="arrow" size={15} />
         </button>
       </div>
