@@ -12,6 +12,7 @@ import PaymentModal from "./components/PaymentModal";
 import FeaturedChefs from "./components/FeaturedChefs";
 import Testimonials from "./components/Testimonials";
 import ChefDashboardPage from "./components/ChefDashboardPage";
+import CustomerOrdersModal from "./components/CustomerOrdersModal";
 import { AuthProvider } from "./services/AuthContext";
 import { api } from "./services/api";
 
@@ -66,7 +67,7 @@ const fallbackRecipes = [
   }
 ];
 
-const categories = ["Todas", "Massas", "Brasileira", "Japonesa", "Mexicana", "Sobremesas"];
+const categories = ["Todas", "Massas", "Brasileira", "Japonesa", "Mexicana", "Sobremesas", "Favoritos ❤️"];
 
 function GastroMatchApp() {
   const [search, setSearch] = useState("");
@@ -76,6 +77,7 @@ function GastroMatchApp() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const [ordersModalOpen, setOrdersModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState("store"); // "store" | "chef"
   const [selectedChef, setSelectedChef] = useState(null);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
@@ -85,6 +87,23 @@ function GastroMatchApp() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [paymentTotal, setPaymentTotal] = useState(0);
   const [toastMessage, setToastMessage] = useState("");
+
+  const [favoriteIds, setFavoriteIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("gastromatch_favorites") || "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  const handleToggleFavorite = (recipeId) => {
+    setFavoriteIds((prev) => {
+      const exists = prev.includes(recipeId);
+      const updated = exists ? prev.filter((id) => id !== recipeId) : [...prev, recipeId];
+      localStorage.setItem("gastromatch_favorites", JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   const [recipes, setRecipes] = useState(fallbackRecipes);
   const [apiConnected, setApiConnected] = useState(false);
@@ -140,7 +159,9 @@ function GastroMatchApp() {
     }
 
     // Category filter
-    if (selectedCategory !== "Todas") {
+    if (selectedCategory === "Favoritos ❤️") {
+      result = result.filter((recipe) => favoriteIds.includes(recipe.id));
+    } else if (selectedCategory !== "Todas") {
       result = result.filter((recipe) =>
         recipe.category === selectedCategory || recipe.category?.name === selectedCategory
       );
@@ -189,6 +210,7 @@ function GastroMatchApp() {
         cartCount={cartItems.length}
         onOpenCart={() => setCartOpen(true)}
         onOpenChefDashboard={() => setCurrentView("chef")}
+        onOpenOrders={() => setOrdersModalOpen(true)}
       />
 
       {toastMessage && (
@@ -290,6 +312,8 @@ function GastroMatchApp() {
                     key={recipe.id || recipe.title || index}
                     recipe={recipe}
                     onSelect={(rec) => setSelectedRecipe(rec)}
+                    isFavorite={favoriteIds.includes(recipe.id)}
+                    onToggleFavorite={handleToggleFavorite}
                   />
                 ))}
               </div>
@@ -381,6 +405,12 @@ function GastroMatchApp() {
       <Footer />
 
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
+      {ordersModalOpen && (
+        <CustomerOrdersModal
+          onClose={() => setOrdersModalOpen(false)}
+          onOpenRecipe={(rec) => setSelectedRecipe(rec)}
+        />
+      )}
       {selectedChef && (
         <ChefProfileModal
           chef={selectedChef}

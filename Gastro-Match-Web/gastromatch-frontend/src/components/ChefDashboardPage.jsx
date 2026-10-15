@@ -38,6 +38,9 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
   });
   const [regSubmitted, setRegSubmitted] = useState(false);
 
+  // Editing Recipe State
+  const [editingRecipeId, setEditingRecipeId] = useState(null);
+
   // New Recipe Form State
   const [form, setForm] = useState({
     title: "",
@@ -105,6 +108,62 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
     setIngredientsList((prev) => prev.filter((_, idx) => idx !== index));
   }
 
+  function handleStartEdit(recipe) {
+    setEditingRecipeId(recipe.id);
+    setForm({
+      title: recipe.title || "",
+      description: recipe.description || "",
+      instructions: recipe.instructions || "",
+      categoryId: recipe.categoryId ? String(recipe.categoryId) : "1",
+      difficulty: recipe.difficulty || "EASY",
+      price: String(recipe.price || "29.90"),
+      prepTime: String(recipe.prepTime || "40"),
+      servings: String(recipe.servings || "2"),
+      imageUrl: recipe.imageUrl || "",
+      videoUrl: recipe.videoUrl || "",
+      hasKit: Boolean(recipe.hasKit),
+      kitPrice: recipe.kitPrice ? String(recipe.kitPrice) : "44.90",
+      kitStock: recipe.kitStock !== undefined && recipe.kitStock !== null ? String(recipe.kitStock) : "15",
+      kitDescription: recipe.kitDescription || "Insumos frescos selecionados e higienizados, temperos artesanais e receita impressa."
+    });
+
+    if (recipe.ingredients && recipe.ingredients.length > 0) {
+      setIngredientsList(
+        recipe.ingredients.map((item) => ({
+          name: item.ingredient?.name || item.name,
+          quantity: item.quantity || "a gosto"
+        }))
+      );
+    } else {
+      setIngredientsList([]);
+    }
+
+    setActiveTab("new");
+    window.scrollTo({ top: 300, behavior: "smooth" });
+  }
+
+  function handleCancelEdit() {
+    setEditingRecipeId(null);
+    setForm({
+      title: "",
+      description: "",
+      instructions: "",
+      categoryId: categories[0]?.id ? String(categories[0].id) : "1",
+      difficulty: "EASY",
+      price: "29.90",
+      prepTime: "40",
+      servings: "2",
+      imageUrl: "",
+      videoUrl: "",
+      hasKit: true,
+      kitPrice: "44.90",
+      kitStock: "15",
+      kitDescription: "Insumos frescos selecionados e higienizados, temperos artesanais e receita impressa."
+    });
+    setIngredientsList([]);
+    setActiveTab("recipes");
+  }
+
   async function handleSubmitRecipe(e) {
     e.preventDefault();
     setErrorMsg("");
@@ -130,9 +189,15 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
         ingredientsList
       };
 
-      await api.createRecipe(payload);
-      setFeedbackMsg("Receita e Kit de Ingredientes publicados com sucesso no catálogo!");
-      
+      if (editingRecipeId) {
+        await api.updateRecipe(editingRecipeId, payload);
+        setFeedbackMsg("Receita e Kit atualizados com sucesso no catálogo!");
+      } else {
+        await api.createRecipe(payload);
+        setFeedbackMsg("Receita e Kit de Ingredientes publicados com sucesso no catálogo!");
+      }
+
+      setEditingRecipeId(null);
       // Reset form
       setForm({
         title: "",
@@ -157,7 +222,7 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
       if (onRecipeCreated) onRecipeCreated();
       setActiveTab("recipes");
     } catch (err) {
-      setErrorMsg(err.message || "Erro ao publicar receita.");
+      setErrorMsg(err.message || "Erro ao salvar receita.");
     } finally {
       setLoading(false);
     }
@@ -668,6 +733,14 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
 
                         <div className="card-footer-actions">
                           <button
+                            type="button"
+                            className="button button-small button-outline edit-btn"
+                            onClick={() => handleStartEdit(r)}
+                          >
+                            <Icon name="fileText" size={14} /> Editar
+                          </button>
+                          <button
+                            type="button"
                             className="button button-small button-outline remove-btn"
                             onClick={() => handleDeleteRecipe(r.id)}
                           >
@@ -687,9 +760,22 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
             <section className="page-section-container">
               <div className="section-header-row">
                 <div>
-                  <h2>Publicar Receita & Disponibilizar Kit Físico</h2>
-                  <p>Preencha os detalhes do prato, ingredientes e configure a venda de insumos para os clientes.</p>
+                  <h2>{editingRecipeId ? "Editar Receita & Kit" : "Publicar Receita & Disponibilizar Kit Físico"}</h2>
+                  <p>
+                    {editingRecipeId
+                      ? "Atualize as informações, insumos do kit e modo de preparo desta receita."
+                      : "Preencha os detalhes do prato, ingredientes e configure a venda de insumos para os clientes."}
+                  </p>
                 </div>
+                {editingRecipeId && (
+                  <button
+                    type="button"
+                    className="button button-small button-outline cancel-edit-btn"
+                    onClick={handleCancelEdit}
+                  >
+                    <Icon name="x" size={14} /> Cancelar Edição
+                  </button>
+                )}
               </div>
 
               <form onSubmit={handleSubmitRecipe} className="chef-page-form">
@@ -920,7 +1006,12 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
                     disabled={loading}
                     className="button button-orange button-large"
                   >
-                    <Icon name="check" size={20} /> {loading ? "Salvando..." : "Publicar no Catálogo & Disponibilizar Kit"}
+                    <Icon name="check" size={20} />{" "}
+                    {loading
+                      ? "Salvando..."
+                      : editingRecipeId
+                      ? "Salvar Alterações da Receita"
+                      : "Publicar no Catálogo & Disponibilizar Kit"}
                   </button>
                 </div>
               </form>

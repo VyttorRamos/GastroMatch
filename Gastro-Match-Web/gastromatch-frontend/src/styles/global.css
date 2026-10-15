@@ -3750,6 +3750,410 @@ input:checked + .slider:before {
   font-weight: 600;
 }
 
+/* ==========================================================================
+   FAVORITES HEART & KIT BADGES ON RECIPE CARDS
+   ========================================================================== */
+.card-heart-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  cursor: pointer;
+  z-index: 4;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-heart-btn:hover {
+  transform: scale(1.1);
+  color: #e11d48;
+  background: #ffffff;
+}
+
+.card-heart-btn.active {
+  color: #e11d48;
+  background: #fff1f2;
+  border-color: #fecdd3;
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.25);
+}
+
+.card-heart-btn.active svg {
+  fill: #e11d48;
+}
+
+.card-has-kit-pill {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(6px);
+  color: #fb923c;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(251, 146, 60, 0.3);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  z-index: 3;
+}
+
+/* ==========================================================================
+   HEADER "MEUS PEDIDOS" BUTTON
+   ========================================================================== */
+.my-orders-header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 24px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.my-orders-header-btn:hover {
+  background: #ffffff;
+  border-color: #ea580c;
+  color: #ea580c;
+  box-shadow: 0 3px 10px rgba(234, 88, 12, 0.12);
+}
+
+/* ==========================================================================
+   CUSTOMER ORDERS MODAL ("MEUS PEDIDOS")
+   ========================================================================== */
+.customer-orders-modal {
+  max-width: 680px;
+  width: 95%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.customer-orders-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, #f8fafc 0%, #fff7ed 100%);
+  border-bottom: 1px solid #fed7aa;
+}
+
+.orders-icon-bubble {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  background: #ea580c;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 6px 16px rgba(234, 88, 12, 0.25);
+}
+
+.customer-orders-header h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 4px;
+}
+
+.customer-orders-header p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.customer-orders-body {
+  padding: 24px 28px;
+  overflow-y: auto;
+  flex: 1;
+  background: #f8fafc;
+}
+
+.orders-loading-state,
+.orders-empty-state {
+  text-align: center;
+  padding: 44px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  color: #64748b;
+}
+
+.orders-empty-state h3 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.orders-empty-state p {
+  max-width: 440px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  margin: 0 auto;
+}
+
+.customer-orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.customer-order-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.customer-order-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+  border-color: #cbd5e1;
+}
+
+.order-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.order-kicker {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.order-date {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.customer-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.customer-status-badge.paid {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.customer-status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.order-items-box {
+  padding: 14px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.order-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.item-title-col strong {
+  display: block;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.item-sub-desc {
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+
+.item-price-val {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Rastreio do Pedido */
+.order-tracking-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin: 10px 0 14px;
+}
+
+.tracking-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.tracking-step.active {
+  color: #166534;
+  font-weight: 700;
+}
+
+.step-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #cbd5e1;
+}
+
+.tracking-step.active .step-dot {
+  background: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2);
+}
+
+.tracking-line {
+  flex: 1;
+  height: 2px;
+  background: #e2e8f0;
+}
+
+.tracking-line.active {
+  background: #16a34a;
+}
+
+.order-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 13.5px;
+  color: #475569;
+}
+
+.order-total-price {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+/* ==========================================================================
+   VIDEOAULA & KIT SUMMARY IN RECIPEMODAL
+   ========================================================================== */
+.videoaula-card-box {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border: 1px solid #fed7aa;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.08);
+}
+
+.videoaula-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #c2410c;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.videoaula-card-box p {
+  font-size: 13px;
+  color: #431407;
+  margin: 0 0 14px;
+  line-height: 1.4;
+}
+
+.kit-summary-box {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 22px;
+}
+
+.kit-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.kit-summary-item span {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.kit-summary-item strong {
+  font-size: 13.5px;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   CHEF DASHBOARD EXTRA BUTTONS
+   ========================================================================== */
+.edit-btn {
+  color: #0284c7 !important;
+  border-color: #bae6fd !important;
+}
+
+.edit-btn:hover {
+  background: #f0f9ff !important;
+  border-color: #0284c7 !important;
+}
+
+.cancel-edit-btn {
+  color: #dc2626 !important;
+  border-color: #fecdd3 !important;
+}
+
+.cancel-edit-btn:hover {
+  background: #fff1f2 !important;
+  border-color: #dc2626 !important;
+}
+
 
 
 

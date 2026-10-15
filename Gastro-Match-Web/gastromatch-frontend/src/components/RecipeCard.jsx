@@ -5,7 +5,7 @@ function formatPrice(value) {
   return Number(value).toFixed(2).replace(".", ",");
 }
 
-export default function RecipeCard({ recipe, onSelect }) {
+export default function RecipeCard({ recipe, onSelect, isFavorite = false, onToggleFavorite }) {
   const rating = recipe.rating ?? "—";
   const reviews = recipe.reviews ?? recipe._count?.reviews ?? 0;
   const time = recipe.time ?? `${recipe.prepTime ?? 0} min`;
@@ -13,6 +13,7 @@ export default function RecipeCard({ recipe, onSelect }) {
   const difficulty = difficultyMap[recipe.difficulty] || recipe.difficulty || "—";
   const chef = recipe.chef?.displayName || recipe.chef?.restaurant || recipe.chef || "GastroMatch";
   const image = recipe.imageUrl || recipe.image;
+  const hasKit = Boolean(recipe.hasKit);
 
   return (
     <article className="recipe-card" onClick={() => onSelect && onSelect(recipe)}>
@@ -23,6 +24,25 @@ export default function RecipeCard({ recipe, onSelect }) {
           <div className="recipe-image-placeholder">GastroMatch</div>
         )}
         <span className="price">R$ {formatPrice(recipe.price)}</span>
+
+        {hasKit && (
+          <span className="card-has-kit-pill">
+            <Icon name="box" size={12} /> Kit de Insumos
+          </span>
+        )}
+
+        <button
+          type="button"
+          className={`card-heart-btn ${isFavorite ? "favorited" : ""}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFavorite && onToggleFavorite(recipe.id);
+          }}
+          title={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
+          aria-label={isFavorite ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
+        >
+          <Icon name="heart" size={16} />
+        </button>
       </div>
 
       <div className="recipe-body">
