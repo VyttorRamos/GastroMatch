@@ -39,7 +39,7 @@ const chefsData = [
   }
 ];
 
-export default function FeaturedChefs({ onOpenChefModal, onSelectChef }) {
+export default function FeaturedChefs({ onOpenChefDashboard, onSelectChef }) {
   return (
     <section className="featured-chefs-section">
       <div className="container">
@@ -49,7 +49,7 @@ export default function FeaturedChefs({ onOpenChefModal, onSelectChef }) {
             <h2>Chefs & Restaurantes Autenticados</h2>
             <p>Conheça os especialistas validados que compartilham receitas e preparam os kits de ingredientes. Clique para ver o perfil.</p>
           </div>
-          <button className="button button-outline button-small" onClick={onOpenChefModal}>
+          <button className="button button-outline button-small" onClick={onOpenChefDashboard}>
             Quero ser um Chef <Icon name="arrow" size={16} />
           </button>
         </div>

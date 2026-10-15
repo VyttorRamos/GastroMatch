@@ -9,7 +9,9 @@ function formatPrice(val) {
 }
 
 export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
-  const { user, logout } = useAuth();
+  const { user, logout, login } = useAuth();
+  const isChefOrAdmin = Boolean(user && (user.role === "CHEF" || user.role === "ADMIN" || Boolean(user.chef)));
+
   const [activeTab, setActiveTab] = useState("recipes"); // recipes, new, orders, metrics
   const [recipes, setRecipes] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -17,6 +19,24 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
   const [loading, setLoading] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+
+  // Portal Access & Onboarding State (when not authenticated as chef)
+  const [accessTab, setAccessTab] = useState("login"); // "login" | "register"
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+
+  // New Restaurant Onboarding Form State
+  const [regForm, setRegForm] = useState({
+    name: "",
+    cnpj: "",
+    restaurant: "",
+    city: "",
+    docType: "Alvará Sanitário Vigente (Vigilância Municipal)",
+    termsAccepted: false
+  });
+  const [regSubmitted, setRegSubmitted] = useState(false);
 
   // New Recipe Form State
   const [form, setForm] = useState({
@@ -46,9 +66,11 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
   const [newIngQty, setNewIngQty] = useState("");
 
   useEffect(() => {
-    loadData();
+    if (isChefOrAdmin) {
+      loadData();
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+  }, [user]);
 
   async function loadData() {
     setLoading(true);
@@ -152,6 +174,301 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
     }
   }
 
+  async function handleQuickLogin(email, password) {
+    setLoginError("");
+    setLoginLoading(true);
+    try {
+      await login(email, password);
+    } catch (err) {
+      setLoginError(err.message || "Erro ao conectar conta de demonstração.");
+    } finally {
+      setLoginLoading(false);
+    }
+  }
+
+  async function handleChefLogin(e) {
+    e.preventDefault();
+    setLoginError("");
+    setLoginLoading(true);
+    try {
+      await login(loginEmail, loginPassword);
+    } catch (err) {
+      setLoginError(err.message || "E-mail ou senha incorretos.");
+    } finally {
+      setLoginLoading(false);
+    }
+  }
+
+  function handleChefRegister(e) {
+    e.preventDefault();
+    setRegSubmitted(true);
+  }
+
+  // TELA DEDICADA DE ACESSO / CREDENCIAMENTO DO CHEF (QUANDO NÃO AUTENTICADO)
+  if (!isChefOrAdmin) {
+    return (
+      <div className="chef-page-layout">
+        {/* Top Navbar */}
+        <header className="chef-page-navbar">
+          <div className="container chef-navbar-inner">
+            <div className="chef-navbar-brand-row">
+              <button className="back-store-button" onClick={onBackToStore}>
+                <Icon name="arrowLeft" size={17} /> Voltar à Vitrine
+              </button>
+              <div className="brand-divider"></div>
+              <div className="chef-brand-identity">
+                <span className="brand-mark-mini">GM</span>
+                <div className="chef-brand-text-col">
+                  <span className="chef-page-portal-title">Portal do Chef & Restaurante</span>
+                  <span className="chef-page-portal-sub">Acesso para Cozinhas & Parceiros GastroMatch</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="chef-navbar-user-controls">
+              <span className="chef-badge-pill-light verified">
+                <Icon name="shieldCheck" size={13} /> Vigilância Sanitária Integrada
+              </span>
+            </div>
+          </div>
+        </header>
+
+        <main className="chef-page-main">
+          <div className="container chef-access-max">
+            {/* Header Hero da Tela */}
+            <div className="chef-access-hero-card">
+              <span className="chef-badge-pill-light live">
+                <span className="live-dot"></span> Programa de Homologação Gastronômica
+              </span>
+              <h1>Área do Chef & Credenciamento de Restaurante</h1>
+              <p>
+                Publique suas receitas autorais, ministre videoaulas didáticas e entregue
+                kits de ingredientes frescos e porcionados diretamente aos clientes.
+              </p>
+            </div>
+
+            {/* Caixa de Demonstração Rápida (1-Clique para Avaliação Acadêmica) */}
+            <div className="chef-demo-access-box">
+              <div className="demo-access-title-row">
+                <div className="demo-icon-badge">
+                  <Icon name="chef" size={24} />
+                </div>
+                <div>
+                  <h3>Acesso Imediato para Demonstração (1-Clique)</h3>
+                  <p>Acesse o painel completo instantaneamente com um dos chefs já homologados no sistema:</p>
+                </div>
+              </div>
+
+              <div className="demo-chef-cards-grid">
+                <div className="demo-chef-select-card">
+                  <div className="demo-chef-meta">
+                    <strong>Chef Gabriel Rossi</strong>
+                    <span>Trattoria da Nonna • Massas & Culinária Italiana</span>
+                    <small>E-mail: gabriel@gastromatch.com</small>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={loginLoading}
+                    className="button button-orange"
+                    onClick={() => handleQuickLogin("gabriel@gastromatch.com", "chef123")}
+                  >
+                    {loginLoading ? "Conectando..." : "Entrar como Chef Gabriel →"}
+                  </button>
+                </div>
+
+                <div className="demo-chef-select-card">
+                  <div className="demo-chef-meta">
+                    <strong>Chef Yasmin Lobo</strong>
+                    <span>Pasticceria Gourmet • Sobremesas & Alta Confeitaria</span>
+                    <small>E-mail: yasmin@gastromatch.com</small>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={loginLoading}
+                    className="button button-orange"
+                    onClick={() => handleQuickLogin("yasmin@gastromatch.com", "chef123")}
+                  >
+                    {loginLoading ? "Conectando..." : "Entrar como Chef Yasmin →"}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Abas na Própria Tela: Login ou Credenciamento (SEM NENHUM MODAL) */}
+            <div className="chef-access-body-card">
+              <div className="chef-access-tab-headers">
+                <button
+                  type="button"
+                  className={`access-tab-toggle ${accessTab === "login" ? "active" : ""}`}
+                  onClick={() => setAccessTab("login")}
+                >
+                  <Icon name="chef" size={17} /> Já sou Chef Parceiro (Login)
+                </button>
+                <button
+                  type="button"
+                  className={`access-tab-toggle ${accessTab === "register" ? "active" : ""}`}
+                  onClick={() => setAccessTab("register")}
+                >
+                  <Icon name="fileText" size={17} /> Credenciar Novo Estabelecimento (Homologação)
+                </button>
+              </div>
+
+              {loginError && <div className="page-alert error">{loginError}</div>}
+
+              {accessTab === "login" && (
+                <form onSubmit={handleChefLogin} className="chef-screen-form">
+                  <div className="form-field">
+                    <span>E-mail do Chef / Restaurante *</span>
+                    <input
+                      type="email"
+                      required
+                      placeholder="ex: seuemail@restaurante.com"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <span>Senha de Acesso *</span>
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-submit-row">
+                    <button
+                      type="submit"
+                      disabled={loginLoading}
+                      className="button button-orange button-large button-full"
+                    >
+                      {loginLoading ? "Autenticando..." : "Acessar Meu Painel"}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {accessTab === "register" && !regSubmitted && (
+                <form onSubmit={handleChefRegister} className="chef-screen-form">
+                  <div className="form-grid-2">
+                    <div className="form-field">
+                      <span>Nome Completo / Responsável Técnico *</span>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ex: Chef Carlos Alberto"
+                        value={regForm.name}
+                        onChange={(e) => setRegForm({ ...regForm, name: e.target.value })}
+                      />
+                    </div>
+                    <div className="form-field">
+                      <span>CNPJ do Estabelecimento *</span>
+                      <input
+                        type="text"
+                        required
+                        placeholder="00.000.000/0001-00"
+                        value={regForm.cnpj}
+                        onChange={(e) => setRegForm({ ...regForm, cnpj: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-grid-2">
+                    <div className="form-field">
+                      <span>Nome Fantasia do Restaurante *</span>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ex: Trattoria del Chef"
+                        value={regForm.restaurant}
+                        onChange={(e) => setRegForm({ ...regForm, restaurant: e.target.value })}
+                      />
+                    </div>
+                    <div className="form-field">
+                      <span>Cidade e Estado *</span>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ex: Florianópolis - SC"
+                        value={regForm.city}
+                        onChange={(e) => setRegForm({ ...regForm, city: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-field">
+                    <span>Documento de Conformidade Sanitária *</span>
+                    <select
+                      value={regForm.docType}
+                      onChange={(e) => setRegForm({ ...regForm, docType: e.target.value })}
+                    >
+                      <option>Alvará Sanitário Vigente (Vigilância Municipal)</option>
+                      <option>Licença da Vigilância Sanitária Municipal</option>
+                      <option>Certificado de Boas Práticas de Manipulação de Alimentos</option>
+                    </select>
+                  </div>
+
+                  <div className="form-upload-area">
+                    <Icon name="fileText" size={26} />
+                    <div className="upload-texts">
+                      <strong>Cópia Digital do Alvará Sanitário / CNPJ</strong>
+                      <p>Formatos aceitos: PDF, JPG ou PNG (tamanho máximo: 10MB)</p>
+                    </div>
+                    <input type="file" accept=".pdf,.jpg,.png" />
+                  </div>
+
+                  <label className="checkbox-confirm-row">
+                    <input
+                      type="checkbox"
+                      required
+                      checked={regForm.termsAccepted}
+                      onChange={(e) => setRegForm({ ...regForm, termsAccepted: e.target.checked })}
+                    />
+                    <span>
+                      Declaro conformidade com as normas sanitárias vigentes (ANVISA/CVS) e aceito os Termos de Parceria GastroMatch.
+                    </span>
+                  </label>
+
+                  <div className="form-submit-row">
+                    <button type="submit" className="button button-orange button-large button-full">
+                      Enviar Credenciais para Homologação
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {accessTab === "register" && regSubmitted && (
+                <div className="reg-success-box">
+                  <div className="reg-success-icon">
+                    <Icon name="shieldCheck" size={44} />
+                  </div>
+                  <h3>Credenciais Enviadas com Sucesso!</h3>
+                  <p>
+                    A solicitação do estabelecimento <strong>{regForm.restaurant || "seu restaurante"}</strong> foi registrada.
+                    Nossa equipe técnica e sanitária analisará os documentos em até 24 horas úteis.
+                  </p>
+                  <div className="reg-success-cta-box">
+                    <span>Enquanto aguarda a análise, você pode explorar as ferramentas agora:</span>
+                    <button
+                      type="button"
+                      className="button button-orange"
+                      onClick={() => handleQuickLogin("gabriel@gastromatch.com", "chef123")}
+                    >
+                      Entrar no Painel de Demonstração
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   const chefName = user?.chef?.displayName || user?.name || "Chef Parceiro";
   const restaurantName = user?.chef?.restaurant || "GastroMatch Kitchen";
 
@@ -168,12 +485,15 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
         <div className="container chef-navbar-inner">
           <div className="chef-navbar-brand-row">
             <button className="back-store-button" onClick={onBackToStore}>
-              <Icon name="arrowLeft" size={17} /> Voltar para a Loja
+              <Icon name="arrowLeft" size={17} /> Voltar à Vitrine
             </button>
             <div className="brand-divider"></div>
             <div className="chef-brand-identity">
               <span className="brand-mark-mini">GM</span>
-              <span className="chef-page-portal-title">Painel do Chef & Restaurante</span>
+              <div className="chef-brand-text-col">
+                <span className="chef-page-portal-title">Portal do Chef & Restaurante</span>
+                <span className="chef-page-portal-sub">Painel de Gestão Culinária & Vendas</span>
+              </div>
             </div>
           </div>
 
@@ -187,7 +507,7 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
                 <span>{chefName}</span>
               </div>
             </div>
-            <button className="button button-small button-outline" onClick={logout}>
+            <button className="button button-small button-outline chef-exit-btn" onClick={logout}>
               Sair
             </button>
           </div>
@@ -197,56 +517,86 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
       {/* Conteúdo Principal da Tela */}
       <main className="chef-page-main">
         <div className="container">
-          {/* Hero Banner do Restaurante */}
-          <section className="chef-banner-card">
-            <div className="chef-banner-content">
-              <div className="chef-banner-title-group">
-                <span className="chef-badge-pill">
-                  <Icon name="shieldCheck" size={14} /> Restaurante Homologado & Certificação Sanitária
-                </span>
-                <h1>{restaurantName}</h1>
-                <p className="chef-banner-desc">
-                  Chef Responsável: <strong>{chefName}</strong> | E-mail: <strong>{user?.email}</strong>
-                </p>
+          {/* Card de Perfil & Status do Restaurante */}
+          <section className="chef-profile-card">
+            <div className="chef-profile-left">
+              <div className="chef-profile-avatar-box">
+                <Icon name="chef" size={32} />
               </div>
-              <div className="chef-banner-actions">
-                <button
-                  className={`chef-cta-tab ${activeTab === "new" ? "active" : ""}`}
-                  onClick={() => setActiveTab("new")}
-                >
-                  <Icon name="plus" size={18} /> Publicar Receita & Kit
-                </button>
+              <div className="chef-profile-info">
+                <div className="chef-badges-row">
+                  <span className="chef-badge-pill-light verified">
+                    <Icon name="shieldCheck" size={14} /> Restaurante Homologado
+                  </span>
+                  <span className="chef-badge-pill-light live">
+                    <span className="live-dot"></span> Cozinha Operacional
+                  </span>
+                </div>
+                <h1 className="chef-profile-title">{restaurantName}</h1>
+                <div className="chef-profile-meta">
+                  <span>Chef Responsável: <strong>{chefName}</strong></span>
+                  <span className="meta-bullet">•</span>
+                  <span>E-mail: <strong>{user?.email}</strong></span>
+                </div>
               </div>
             </div>
 
-            {/* Menu de Abas da Página */}
-            <div className="chef-page-tabs">
-              <button
-                className={`page-tab-item ${activeTab === "recipes" ? "active" : ""}`}
-                onClick={() => setActiveTab("recipes")}
-              >
-                <Icon name="book" size={18} /> Minhas Receitas & Kits ({recipes.length})
-              </button>
-              <button
-                className={`page-tab-item ${activeTab === "new" ? "active" : ""}`}
-                onClick={() => setActiveTab("new")}
-              >
-                <Icon name="plus" size={18} /> Nova Receita & Kit
-              </button>
-              <button
-                className={`page-tab-item ${activeTab === "orders" ? "active" : ""}`}
-                onClick={() => setActiveTab("orders")}
-              >
-                <Icon name="bag" size={18} /> Vendas & Pedidos ({orders.length})
-              </button>
-              <button
-                className={`page-tab-item ${activeTab === "metrics" ? "active" : ""}`}
-                onClick={() => setActiveTab("metrics")}
-              >
-                <Icon name="barChart" size={18} /> Métricas & Faturamento
-              </button>
+            {/* Resumo Rápido de Indicadores */}
+            <div className="chef-quick-kpis">
+              <div className="kpi-mini-card">
+                <span className="kpi-mini-label">Receitas Ativas</span>
+                <strong className="kpi-mini-value">{recipes.length}</strong>
+              </div>
+              <div className="kpi-mini-divider"></div>
+              <div className="kpi-mini-card">
+                <span className="kpi-mini-label">Kits Físicos</span>
+                <strong className="kpi-mini-value">{kitsActiveCount}</strong>
+              </div>
+              <div className="kpi-mini-divider"></div>
+              <div className="kpi-mini-card">
+                <span className="kpi-mini-label">Vendas Totais</span>
+                <strong className="kpi-mini-value orange">R$ {formatPrice(totalSales)}</strong>
+              </div>
             </div>
           </section>
+
+          {/* Barra de Navegação por Abas (Segmented Control Moderno) */}
+          <nav className="chef-segmented-nav" aria-label="Navegação do Painel">
+            <button
+              type="button"
+              className={`nav-tab-pill ${activeTab === "recipes" ? "active" : ""}`}
+              onClick={() => setActiveTab("recipes")}
+            >
+              <Icon name="book" size={17} />
+              <span>Minhas Receitas & Kits</span>
+              <span className="tab-badge">{recipes.length}</span>
+            </button>
+            <button
+              type="button"
+              className={`nav-tab-pill tab-cta ${activeTab === "new" ? "active" : ""}`}
+              onClick={() => setActiveTab("new")}
+            >
+              <Icon name="plus" size={17} />
+              <span>Cadastrar Nova Receita & Kit</span>
+            </button>
+            <button
+              type="button"
+              className={`nav-tab-pill ${activeTab === "orders" ? "active" : ""}`}
+              onClick={() => setActiveTab("orders")}
+            >
+              <Icon name="bag" size={17} />
+              <span>Vendas & Pedidos</span>
+              <span className="tab-badge">{orders.length}</span>
+            </button>
+            <button
+              type="button"
+              className={`nav-tab-pill ${activeTab === "metrics" ? "active" : ""}`}
+              onClick={() => setActiveTab("metrics")}
+            >
+              <Icon name="barChart" size={17} />
+              <span>Métricas & Faturamento</span>
+            </button>
+          </nav>
 
           {/* Notificações e Alertas */}
           {feedbackMsg && <div className="page-alert success">{feedbackMsg}</div>}

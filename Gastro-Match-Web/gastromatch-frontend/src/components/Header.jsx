@@ -1,7 +1,7 @@
 import Icon from "./Icon";
 import { useAuth } from "../services/AuthContext";
 
-export default function Header({ search, setSearch, menuOpen, setMenuOpen, onAuth, cartCount = 0, onOpenCart, onOpenChefModal, onOpenChefDashboard }) {
+export default function Header({ search, setSearch, menuOpen, setMenuOpen, onAuth, cartCount = 0, onOpenCart, onOpenChefDashboard }) {
   const { user, logout } = useAuth();
   const isChefOrAdmin = user && (user.role === "CHEF" || user.role === "ADMIN" || Boolean(user.chef));
 
@@ -26,15 +26,9 @@ export default function Header({ search, setSearch, menuOpen, setMenuOpen, onAut
         <nav className={`nav ${menuOpen ? "open" : ""}`}>
           <a href="#receitas">Explorar</a>
 
-          {isChefOrAdmin ? (
-            <button className="chef-nav-highlight-btn" onClick={onOpenChefDashboard}>
-              <Icon name="chef" size={16} /> Painel do Chef
-            </button>
-          ) : (
-            <button className="text-nav-btn" onClick={onOpenChefModal}>
-              Seja um Chef
-            </button>
-          )}
+          <button className="chef-nav-highlight-btn" onClick={onOpenChefDashboard}>
+            <Icon name="chef" size={16} /> {isChefOrAdmin ? "Painel do Chef" : "Área do Chef"}
+          </button>
 
           <button className="icon-button" onClick={onOpenCart} aria-label="Sacola">
             <Icon name="bag" size={19} />

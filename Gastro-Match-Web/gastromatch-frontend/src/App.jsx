@@ -7,7 +7,6 @@ import Footer from "./components/Footer";
 import AuthModal from "./components/AuthModal";
 import RecipeModal from "./components/RecipeModal";
 import CartDrawer from "./components/CartDrawer";
-import ChefPartnerModal from "./components/ChefPartnerModal";
 import ChefProfileModal from "./components/ChefProfileModal";
 import PaymentModal from "./components/PaymentModal";
 import FeaturedChefs from "./components/FeaturedChefs";
@@ -77,7 +76,6 @@ function GastroMatchApp() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const [chefModalOpen, setChefModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState("store"); // "store" | "chef"
   const [selectedChef, setSelectedChef] = useState(null);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
@@ -190,7 +188,6 @@ function GastroMatchApp() {
         onAuth={() => setAuthOpen(true)}
         cartCount={cartItems.length}
         onOpenCart={() => setCartOpen(true)}
-        onOpenChefModal={() => setChefModalOpen(true)}
         onOpenChefDashboard={() => setCurrentView("chef")}
       />
 
@@ -214,8 +211,8 @@ function GastroMatchApp() {
                   <button className="button button-light" onClick={scrollToRecipes}>
                     Explorar receitas <Icon name="arrow" size={18} />
                   </button>
-                  <button className="button button-outline" onClick={() => setChefModalOpen(true)}>
-                    Cadastrar Restaurante / Chef
+                  <button className="button button-outline" onClick={() => setCurrentView("chef")}>
+                    Área do Chef & Parceiros
                   </button>
                 </div>
               </div>
@@ -234,7 +231,7 @@ function GastroMatchApp() {
 
         {/* Featured Chefs Section */}
         <FeaturedChefs
-          onOpenChefModal={() => setChefModalOpen(true)}
+          onOpenChefDashboard={() => setCurrentView("chef")}
           onSelectChef={(chef) => setSelectedChef(chef)}
         />
 
@@ -324,8 +321,8 @@ function GastroMatchApp() {
                   <span><Icon name="check" size={16} /> Venda de Kits & Aulas</span>
                 </div>
 
-                <button className="button button-orange" onClick={() => setChefModalOpen(true)}>
-                  Cadastrar Estabelecimento <Icon name="arrow" size={18} />
+                <button className="button button-orange" onClick={() => setCurrentView("chef")}>
+                  Acessar Portal do Chef <Icon name="arrow" size={18} />
                 </button>
               </div>
 
@@ -384,7 +381,6 @@ function GastroMatchApp() {
       <Footer />
 
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
-      {chefModalOpen && <ChefPartnerModal onClose={() => setChefModalOpen(false)} />}
       {selectedChef && (
         <ChefProfileModal
           chef={selectedChef}
