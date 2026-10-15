@@ -12,7 +12,7 @@ import ChefProfileModal from "./components/ChefProfileModal";
 import PaymentModal from "./components/PaymentModal";
 import FeaturedChefs from "./components/FeaturedChefs";
 import Testimonials from "./components/Testimonials";
-import ChefDashboardModal from "./components/ChefDashboardModal";
+import ChefDashboardPage from "./components/ChefDashboardPage";
 import { AuthProvider } from "./services/AuthContext";
 import { api } from "./services/api";
 
@@ -78,7 +78,7 @@ function GastroMatchApp() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [chefModalOpen, setChefModalOpen] = useState(false);
-  const [chefDashboardOpen, setChefDashboardOpen] = useState(false);
+  const [currentView, setCurrentView] = useState("store"); // "store" | "chef"
   const [selectedChef, setSelectedChef] = useState(null);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
 
@@ -171,6 +171,15 @@ function GastroMatchApp() {
     document.getElementById("receitas")?.scrollIntoView({ behavior: "smooth" });
   };
 
+  if (currentView === "chef") {
+    return (
+      <ChefDashboardPage
+        onBackToStore={() => setCurrentView("store")}
+        onRecipeCreated={fetchRecipes}
+      />
+    );
+  }
+
   return (
     <div className="app">
       <Header
@@ -182,7 +191,7 @@ function GastroMatchApp() {
         cartCount={cartItems.length}
         onOpenCart={() => setCartOpen(true)}
         onOpenChefModal={() => setChefModalOpen(true)}
-        onOpenChefDashboard={() => setChefDashboardOpen(true)}
+        onOpenChefDashboard={() => setCurrentView("chef")}
       />
 
       {toastMessage && (
@@ -376,13 +385,6 @@ function GastroMatchApp() {
 
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
       {chefModalOpen && <ChefPartnerModal onClose={() => setChefModalOpen(false)} />}
-      {chefDashboardOpen && (
-        <ChefDashboardModal
-          isOpen={chefDashboardOpen}
-          onClose={() => setChefDashboardOpen(false)}
-          onRecipeCreated={fetchRecipes}
-        />
-      )}
       {selectedChef && (
         <ChefProfileModal
           chef={selectedChef}
