@@ -278,13 +278,13 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
           <div className="container chef-navbar-inner">
             <div className="chef-navbar-brand-row">
               <button className="back-store-button" onClick={onBackToStore}>
-                <Icon name="arrowLeft" size={17} /> Voltar à Vitrine
+                <Icon name="arrowLeft" size={17} /> <span>Voltar à Vitrine</span>
               </button>
               <div className="brand-divider"></div>
               <div className="chef-brand-identity">
                 <span className="brand-mark-mini">GM</span>
                 <div className="chef-brand-text-col">
-                  <span className="chef-page-portal-title">Portal do Chef & Restaurante</span>
+                  <span className="chef-page-portal-title">Portal do Chef</span>
                   <span className="chef-page-portal-sub">Acesso para Cozinhas & Parceiros GastroMatch</span>
                 </div>
               </div>
@@ -292,7 +292,7 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
 
             <div className="chef-navbar-user-controls">
               <span className="chef-badge-pill-light verified">
-                <Icon name="shieldCheck" size={13} /> Vigilância Sanitária Integrada
+                <Icon name="shieldCheck" size={13} /> <span>Vigilância Sanitária</span>
               </span>
             </div>
           </div>
@@ -549,14 +549,14 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
       <header className="chef-page-navbar">
         <div className="container chef-navbar-inner">
           <div className="chef-navbar-brand-row">
-            <button className="back-store-button" onClick={onBackToStore}>
-              <Icon name="arrowLeft" size={17} /> Voltar à Vitrine
+            <button className="back-store-button" onClick={onBackToStore} title="Voltar à Vitrine">
+              <Icon name="arrowLeft" size={17} /> <span>Voltar à Vitrine</span>
             </button>
             <div className="brand-divider"></div>
             <div className="chef-brand-identity">
               <span className="brand-mark-mini">GM</span>
               <div className="chef-brand-text-col">
-                <span className="chef-page-portal-title">Portal do Chef & Restaurante</span>
+                <span className="chef-page-portal-title">Portal do Chef</span>
                 <span className="chef-page-portal-sub">Painel de Gestão Culinária & Vendas</span>
               </div>
             </div>
@@ -572,8 +572,8 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
                 <span>{chefName}</span>
               </div>
             </div>
-            <button className="button button-small button-outline chef-exit-btn" onClick={logout}>
-              Sair
+            <button className="button button-small button-outline chef-exit-btn" onClick={logout} title="Sair do painel do chef">
+              <Icon name="x" size={14} /> <span>Sair</span>
             </button>
           </div>
         </div>

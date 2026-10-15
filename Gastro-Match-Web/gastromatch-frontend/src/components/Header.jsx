@@ -24,42 +24,82 @@ export default function Header({ search, setSearch, menuOpen, setMenuOpen, onAut
         </div>
 
         <nav className={`nav ${menuOpen ? "open" : ""}`}>
-          <a href="#receitas">Explorar</a>
+          <a href="#receitas" onClick={() => setMenuOpen(false)}>
+            Explorar
+          </a>
 
-          <button className="chef-nav-highlight-btn" onClick={onOpenChefDashboard}>
+          <button
+            className="chef-nav-highlight-btn"
+            onClick={() => {
+              onOpenChefDashboard();
+              setMenuOpen(false);
+            }}
+          >
             <Icon name="chef" size={16} /> {isChefOrAdmin ? "Painel do Chef" : "Área do Chef"}
           </button>
 
-          <button className="icon-button" onClick={onOpenCart} aria-label="Sacola">
+          <button className="icon-button desktop-cart-btn" onClick={onOpenCart} aria-label="Sacola">
             <Icon name="bag" size={19} />
             <span className="cart-dot">{cartCount}</span>
           </button>
 
           {user ? (
             <div className="user-area">
-              <button className="my-orders-header-btn" onClick={onOpenOrders} title="Meus Pedidos">
+              <button
+                className="my-orders-header-btn"
+                onClick={() => {
+                  onOpenOrders();
+                  setMenuOpen(false);
+                }}
+                title="Meus Pedidos"
+              >
                 <Icon name="bag" size={14} /> Meus Pedidos
               </button>
               <span className="user-name">
                 {isChefOrAdmin && <span className="chef-inline-badge">CHEF</span>}
                 Olá, {user.name.split(" ")[0]}
               </span>
-              <button className="button button-small" onClick={logout}>Sair</button>
+              <button
+                className="button button-small"
+                onClick={() => {
+                  logout();
+                  setMenuOpen(false);
+                }}
+              >
+                Sair
+              </button>
             </div>
           ) : (
-            <button className="button button-small" onClick={() => onAuth("login")}>
+            <button
+              className="button button-small"
+              onClick={() => {
+                onAuth("login");
+                setMenuOpen(false);
+              }}
+            >
               Entrar
             </button>
           )}
         </nav>
 
-        <button
-          className="menu-button"
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Abrir menu"
-        >
-          {menuOpen ? <Icon name="x" /> : <Icon name="menu" />}
-        </button>
+        <div className="header-mobile-actions">
+          <button
+            className="icon-button mobile-cart-btn"
+            onClick={onOpenCart}
+            aria-label="Abrir Sacola"
+          >
+            <Icon name="bag" size={20} />
+            <span className="cart-dot">{cartCount}</span>
+          </button>
+
+          <button
+            className="menu-button"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Abrir menu"
+          >
+            {menuOpen ? <Icon name="x" size={22} /> : <Icon name="menu" size={22} />}
+          </button>
+        </div>
       </div>
     </header>
   );
