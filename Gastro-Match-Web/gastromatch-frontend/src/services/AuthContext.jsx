@@ -37,13 +37,21 @@ export function AuthProvider({ children }) {
     return data.user;
   }
 
+  async function updateProfile(profileData) {
+    const res = await api.updateProfile(profileData);
+    if (res.user) {
+      setUser(res.user);
+    }
+    return res.user;
+  }
+
   function logout() {
     localStorage.removeItem("gastromatch_token");
     setUser(null);
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, setUser, loading, login, register, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

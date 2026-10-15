@@ -13,7 +13,9 @@ import FeaturedChefs from "./components/FeaturedChefs";
 import Testimonials from "./components/Testimonials";
 import ChefDashboardPage from "./components/ChefDashboardPage";
 import CustomerOrdersModal from "./components/CustomerOrdersModal";
-import { AuthProvider } from "./services/AuthContext";
+import UserProfileModal from "./components/UserProfileModal";
+import UserDashboardBanner from "./components/UserDashboardBanner";
+import { AuthProvider, useAuth } from "./services/AuthContext";
 import { api } from "./services/api";
 
 const fallbackRecipes = [
@@ -70,14 +72,17 @@ const fallbackRecipes = [
 const categories = ["Todas", "Massas", "Brasileira", "Japonesa", "Mexicana", "Sobremesas", "Favoritos ❤️"];
 
 function GastroMatchApp() {
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todas");
   const [selectedDifficulty, setSelectedDifficulty] = useState("Todas");
+  const [selectedDietary, setSelectedDietary] = useState("Todas");
   const [sortBy, setSortBy] = useState("relevancia");
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [ordersModalOpen, setOrdersModalOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState("store"); // "store" | "chef"
   const [selectedChef, setSelectedChef] = useState(null);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
@@ -87,6 +92,7 @@ function GastroMatchApp() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [paymentTotal, setPaymentTotal] = useState(0);
   const [toastMessage, setToastMessage] = useState("");
+  const [customerOrdersCount, setCustomerOrdersCount] = useState(0);
 
   const [favoriteIds, setFavoriteIds] = useState(() => {
     try {
@@ -129,6 +135,20 @@ function GastroMatchApp() {
     fetchRecipes();
   }, []);
 
+  useEffect(() => {
+    if (user?.token) {
+      api.myOrders(user.token)
+        .then((orders) => {
+          if (Array.isArray(orders)) {
+            setCustomerOrdersCount(orders.length);
+          }
+        })
+        .catch(() => {});
+    } else {
+      setCustomerOrdersCount(0);
+    }
+  }, [user?.token]);
+
   const handleAddToCart = (item) => {
     setCartItems((prev) => [...prev, item]);
     setToastMessage(`"${item.recipe?.title || item.title}" adicionado à sacola!`);
@@ -167,6 +187,22 @@ function GastroMatchApp() {
       );
     }
 
+    // Dietary filter
+    if (selectedDietary !== "Todas") {
+      const dietaryKeywords = {
+        "Vegetariano": ["vegetariano", "cogumelo", "queijo", "massa", "legumes", "risoto", "carbonara"],
+        "Vegano": ["vegano", "vegetal", "legumes", "shari", "cogumelo"],
+        "Sem Glúten": ["sem glúten", "sem gluten", "arroz", "milho", "tacos", "feijoada", "sushi"],
+        "Sem Lactose": ["sem lactose", "lac-free", "sushi", "tacos", "omakase"],
+        "Low Carb": ["low carb", "fit", "salmão", "atum", "carne", "cogumelos"]
+      }[selectedDietary] || [selectedDietary.toLowerCase()];
+
+      result = result.filter((recipe) => {
+        const text = `${recipe.title} ${recipe.description || ""} ${recipe.category?.name || recipe.category || ""}`.toLowerCase();
+        return dietaryKeywords.some((kw) => text.includes(kw));
+      });
+    }
+
     // Difficulty filter
     if (selectedDifficulty !== "Todas") {
       result = result.filter((recipe) => {
@@ -184,7 +220,7 @@ function GastroMatchApp() {
     }
 
     return result;
-  }, [search, selectedCategory, selectedDifficulty, sortBy, recipes]);
+  }, [search, selectedCategory, selectedDifficulty, selectedDietary, sortBy, recipes, favoriteIds]);
 
   const scrollToRecipes = () => {
     document.getElementById("receitas")?.scrollIntoView({ behavior: "smooth" });
@@ -211,6 +247,11 @@ function GastroMatchApp() {
         onOpenCart={() => setCartOpen(true)}
         onOpenChefDashboard={() => setCurrentView("chef")}
         onOpenOrders={() => setOrdersModalOpen(true)}
+        onOpenProfile={() => setProfileModalOpen(true)}
+        onFilterFavorites={() => {
+          setSelectedCategory("Favoritos ❤️");
+          scrollToRecipes();
+        }}
       />
 
       {toastMessage && (
@@ -250,6 +291,19 @@ function GastroMatchApp() {
         </section>
 
         <Stats />
+
+        {user && (
+          <UserDashboardBanner
+            onOpenProfile={() => setProfileModalOpen(true)}
+            onOpenOrders={() => setOrdersModalOpen(true)}
+            onFilterFavorites={() => {
+              setSelectedCategory("Favoritos ❤️");
+              scrollToRecipes();
+            }}
+            favoriteCount={favoriteIds.length}
+            ordersCount={customerOrdersCount}
+          />
+        )}
 
         {/* Featured Chefs Section */}
         <FeaturedChefs
@@ -296,6 +350,21 @@ function GastroMatchApp() {
               </div>
 
               <div className="filter-group">
+                <label><Icon name="heart" size={14} /> Dieta / Restrição:</label>
+                <select
+                  value={selectedDietary}
+                  onChange={(e) => setSelectedDietary(e.target.value)}
+                >
+                  <option value="Todas">Todas as dietas</option>
+                  <option value="Vegetariano">Vegetariano</option>
+                  <option value="Vegano">Vegano</option>
+                  <option value="Sem Glúten">Sem Glúten</option>
+                  <option value="Sem Lactose">Sem Lactose</option>
+                  <option value="Low Carb">Low Carb / Fit</option>
+                </select>
+              </div>
+
+              <div className="filter-group">
                 <label>Ordenar por:</label>
                 <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
                   <option value="relevancia">Mais Relevantes</option>
@@ -322,7 +391,15 @@ function GastroMatchApp() {
                 <Icon name="search" size={32} />
                 <h3>Nenhuma receita encontrada</h3>
                 <p>Tente ajustar os filtros ou a busca.</p>
-                <button className="button button-small button-outline" onClick={() => { setSearch(""); setSelectedCategory("Todas"); setSelectedDifficulty("Todas"); }}>
+                <button
+                  className="button button-small button-outline"
+                  onClick={() => {
+                    setSearch("");
+                    setSelectedCategory("Todas");
+                    setSelectedDifficulty("Todas");
+                    setSelectedDietary("Todas");
+                  }}
+                >
                   Limpar Filtros
                 </button>
               </div>
@@ -405,6 +482,9 @@ function GastroMatchApp() {
       <Footer />
 
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
+      {profileModalOpen && (
+        <UserProfileModal onClose={() => setProfileModalOpen(false)} />
+      )}
       {ordersModalOpen && (
         <CustomerOrdersModal
           onClose={() => setOrdersModalOpen(false)}

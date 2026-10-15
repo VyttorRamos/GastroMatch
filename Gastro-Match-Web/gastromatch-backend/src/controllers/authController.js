@@ -78,4 +78,70 @@ async function me(req, res) {
   }
 }
 
-module.exports = { register, login, me };
+async function updateProfile(req, res) {
+  try {
+    const userId = req.user.id;
+    const { name, avatarUrl, phone, city, state, country, preferences, currentPassword, newPassword } = req.body;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { profile: true }
+    });
+
+    if (!user) return res.status(404).json({ message: "Usuário não encontrado." });
+
+    let newPasswordHash;
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ message: "Informe a senha atual para alterar sua senha." });
+      }
+      const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!isMatch) {
+        return res.status(400).json({ message: "Senha atual incorreta." });
+      }
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "A nova senha deve ter no mínimo 6 caracteres." });
+      }
+      newPasswordHash = await bcrypt.hash(newPassword, 12);
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        name: name ? name.trim() : user.name,
+        avatarUrl: avatarUrl !== undefined ? avatarUrl : user.avatarUrl,
+        passwordHash: newPasswordHash || undefined,
+        profile: {
+          upsert: {
+            create: {
+              phone: phone || null,
+              city: city || null,
+              state: state || null,
+              country: country || "Brasil",
+              preferences: preferences || {}
+            },
+            update: {
+              phone: phone !== undefined ? phone : undefined,
+              city: city !== undefined ? city : undefined,
+              state: state !== undefined ? state : undefined,
+              country: country !== undefined ? country : undefined,
+              preferences: preferences !== undefined ? preferences : undefined
+            }
+          }
+        }
+      },
+      include: { profile: true, chef: true }
+    });
+
+    const { passwordHash, ...safeUser } = updatedUser;
+    res.json({
+      message: "Perfil atualizado com sucesso.",
+      user: safeUser
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erro ao atualizar perfil." });
+  }
+}
+
+module.exports = { register, login, me, updateProfile };

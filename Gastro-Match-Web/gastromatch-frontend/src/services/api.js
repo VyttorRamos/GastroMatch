@@ -36,6 +36,12 @@ export const api = {
 
   me: () => request("/auth/me"),
 
+  updateProfile: (data) =>
+    request("/auth/profile", {
+      method: "PUT",
+      body: JSON.stringify(data)
+    }),
+
   recipes: (search = "") =>
     request(`/recipes${search ? `?search=${encodeURIComponent(search)}` : ""}`),
 

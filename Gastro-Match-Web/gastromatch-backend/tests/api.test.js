@@ -53,6 +53,36 @@ test("GastroMatch API - Suíte de Testes Automatizados", async (t) => {
     assert.equal(data.email, "admin@gastromatch.com");
   });
 
+  await t.test("4.1. Usuário - Atualizar Perfil e Preferências (/api/auth/profile)", async () => {
+    assert.ok(authToken, "Token JWT deve estar disponível");
+    const res = await fetch(`${BASE_URL}/auth/profile`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`
+      },
+      body: JSON.stringify({
+        phone: "(48) 99999-1234",
+        city: "Florianópolis",
+        state: "SC",
+        preferences: {
+          dietary: ["Vegetariano", "Sem Glúten"],
+          address: {
+            zipCode: "88010-000",
+            street: "Avenida Beira Mar Norte",
+            number: "1500",
+            neighborhood: "Centro"
+          }
+        }
+      })
+    });
+    assert.equal(res.status, 200, "Atualização de perfil deve retornar 200");
+    const data = await res.json();
+    assert.ok(data.user, "Deve retornar objeto user atualizado");
+    assert.equal(data.user.profile?.city, "Florianópolis");
+    assert.deepEqual(data.user.profile?.preferences?.dietary, ["Vegetariano", "Sem Glúten"]);
+  });
+
   await t.test("5. Categorias (/api/categories) deve listar categorias cadastradas", async () => {
     const res = await fetch(`${BASE_URL}/categories`);
     assert.equal(res.status, 200);
