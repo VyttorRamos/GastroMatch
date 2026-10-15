@@ -101,6 +101,10 @@ model Recipe {
   imageUrl     String?
   videoUrl     String?
   price        Decimal            @db.Decimal(10, 2)
+  hasKit       Boolean            @default(false)
+  kitPrice     Decimal?           @db.Decimal(10, 2)
+  kitStock     Int?               @default(10)
+  kitDescription String?
   prepTime     Int
   servings     Int
   difficulty   Difficulty         @default(EASY)

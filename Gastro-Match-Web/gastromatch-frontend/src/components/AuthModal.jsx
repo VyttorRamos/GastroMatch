@@ -82,8 +82,38 @@ export default function AuthModal({ onClose }) {
         </form>
 
         <button className="auth-switch" onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(""); }}>
-          {mode === "login" ? "Ainda não tenho uma conta" : "Já tenho uma conta"}
+          {mode === "login" ? "Ainda não tenho uma conta (Criar conta)" : "Já tenho uma conta (Fazer login)"}
         </button>
+
+        <div className="chef-quick-login-box">
+          <span className="chef-quick-title">
+            <Icon name="chef" size={14} /> Acesso de Demonstração para Chefs:
+          </span>
+          <div className="chef-quick-buttons">
+            <button
+              type="button"
+              className="quick-chef-btn"
+              onClick={() => {
+                setMode("login");
+                setEmail("gabriel@gastromatch.com");
+                setPassword("123456");
+              }}
+            >
+              Chef Gabriel (Massas)
+            </button>
+            <button
+              type="button"
+              className="quick-chef-btn"
+              onClick={() => {
+                setMode("login");
+                setEmail("yasmin@gastromatch.com");
+                setPassword("123456");
+              }}
+            >
+              Chef Yasmin (Doces)
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

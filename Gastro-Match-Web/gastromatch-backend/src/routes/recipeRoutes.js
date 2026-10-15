@@ -3,6 +3,7 @@ const controller = require("../controllers/recipeController");
 const { authenticate, authorize } = require("../middleware/auth");
 
 router.get("/", controller.list);
+router.get("/mine", authenticate, controller.mine);
 router.get("/:id", controller.getById);
 router.post("/", authenticate, authorize("CHEF", "ADMIN"), controller.create);
 router.put("/:id", authenticate, authorize("CHEF", "ADMIN"), controller.update);

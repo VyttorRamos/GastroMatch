@@ -62,5 +62,35 @@ export const api = {
     request("/orders", {
       method: "POST",
       body: JSON.stringify({ items })
+    }),
+
+  checkout: (items, paymentMethod = "PIX", cardDetails = {}) =>
+    request("/orders", {
+      method: "POST",
+      body: JSON.stringify({ items, paymentMethod, cardDetails })
+    }),
+
+  confirmPayment: (orderId) =>
+    request(`/orders/${orderId}/confirm-payment`, {
+      method: "POST"
+    }),
+
+  myRecipes: () => request("/recipes/mine"),
+
+  createRecipe: (data) =>
+    request("/recipes", {
+      method: "POST",
+      body: JSON.stringify(data)
+    }),
+
+  updateRecipe: (id, data) =>
+    request(`/recipes/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data)
+    }),
+
+  deleteRecipe: (id) =>
+    request(`/recipes/${id}`, {
+      method: "DELETE"
     })
 };

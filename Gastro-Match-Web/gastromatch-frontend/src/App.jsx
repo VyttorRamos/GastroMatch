@@ -9,8 +9,10 @@ import RecipeModal from "./components/RecipeModal";
 import CartDrawer from "./components/CartDrawer";
 import ChefPartnerModal from "./components/ChefPartnerModal";
 import ChefProfileModal from "./components/ChefProfileModal";
+import PaymentModal from "./components/PaymentModal";
 import FeaturedChefs from "./components/FeaturedChefs";
 import Testimonials from "./components/Testimonials";
+import ChefDashboardModal from "./components/ChefDashboardModal";
 import { AuthProvider } from "./services/AuthContext";
 import { api } from "./services/api";
 
@@ -76,17 +78,20 @@ function GastroMatchApp() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [chefModalOpen, setChefModalOpen] = useState(false);
+  const [chefDashboardOpen, setChefDashboardOpen] = useState(false);
   const [selectedChef, setSelectedChef] = useState(null);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
 
   const [cartOpen, setCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState([]);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentTotal, setPaymentTotal] = useState(0);
   const [toastMessage, setToastMessage] = useState("");
 
   const [recipes, setRecipes] = useState(fallbackRecipes);
   const [apiConnected, setApiConnected] = useState(false);
 
-  useEffect(() => {
+  const fetchRecipes = () => {
     api.recipes()
       .then((data) => {
         if (Array.isArray(data) && data.length) {
@@ -101,16 +106,26 @@ function GastroMatchApp() {
         setRecipes(fallbackRecipes);
         setApiConnected(false);
       });
+  };
+
+  useEffect(() => {
+    fetchRecipes();
   }, []);
 
   const handleAddToCart = (item) => {
     setCartItems((prev) => [...prev, item]);
-    setToastMessage(`"${item.recipe.title}" adicionado à sacola!`);
+    setToastMessage(`"${item.recipe?.title || item.title}" adicionado à sacola!`);
     setTimeout(() => setToastMessage(""), 3500);
   };
 
   const handleRemoveCartItem = (index) => {
     setCartItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handlePaymentCompleted = () => {
+    setCartItems([]);
+    setToastMessage("Pagamento confirmado com sucesso!");
+    setTimeout(() => setToastMessage(""), 4000);
   };
 
   const filteredRecipes = useMemo(() => {
@@ -167,6 +182,7 @@ function GastroMatchApp() {
         cartCount={cartItems.length}
         onOpenCart={() => setCartOpen(true)}
         onOpenChefModal={() => setChefModalOpen(true)}
+        onOpenChefDashboard={() => setChefDashboardOpen(true)}
       />
 
       {toastMessage && (
@@ -360,6 +376,13 @@ function GastroMatchApp() {
 
       {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
       {chefModalOpen && <ChefPartnerModal onClose={() => setChefModalOpen(false)} />}
+      {chefDashboardOpen && (
+        <ChefDashboardModal
+          isOpen={chefDashboardOpen}
+          onClose={() => setChefDashboardOpen(false)}
+          onRecipeCreated={fetchRecipes}
+        />
+      )}
       {selectedChef && (
         <ChefProfileModal
           chef={selectedChef}
@@ -381,7 +404,19 @@ function GastroMatchApp() {
         cartItems={cartItems}
         onRemoveItem={handleRemoveCartItem}
         onClearCart={() => setCartItems([])}
+        onOpenPaymentModal={(total) => {
+          setPaymentTotal(total);
+          setPaymentModalOpen(true);
+        }}
       />
+      {paymentModalOpen && (
+        <PaymentModal
+          cartItems={cartItems}
+          totalAmount={paymentTotal}
+          onClose={() => setPaymentModalOpen(false)}
+          onPaymentSuccess={handlePaymentCompleted}
+        />
+      )}
     </div>
   );
 }

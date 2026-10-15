@@ -667,74 +667,51 @@ A implantação será realizada posteriormente utilizando os recursos disponíve
 
 ---
 
-# 23. Status do projeto
+# 23. Status do projeto (Avaliação Acadêmica)
 
-## Concluído
+## Concluído no MVP
 
-### Frontend
-
-- Estrutura inicial do frontend;
-- Página inicial;
-- Header;
-- Busca de receitas;
-- Cards de receitas;
-- Estatísticas;
-- Seção "Como funciona";
-- CTA de cadastro;
-- Footer;
-- Responsividade inicial;
-- Integração com API;
-- Tela de login;
-- Tela de cadastro;
-- Logout;
-- Persistência da autenticação.
+### Frontend Web
+- Estrutura completa em React + Vite;
+- Header com busca, sacola de compras e atalhos de autenticação;
+- Catálogo de receitas integrado ao PostgreSQL;
+- Modal de detalhes da receita com modo de preparo passo a passo e ingredientes;
+- **Painel do Chef / Restaurante:**
+  - Publicação de novas receitas autorais com foto e videoaula;
+  - Inclusão dinâmica de ingredientes e dosagens;
+  - **Venda de Kits de Ingredientes Físicos** com precificação e estoque;
+  - Histórico de pedidos recebidos e métricas de faturamento;
+- Sacola de compras com cálculo de frete por CEP;
+- Modal de checkout com pagamento PIX (cópia e cola + QR Code oficial);
+- Autenticação e atalhos de login de demonstração para chefs;
+- Design 100% responsivo para mobile, tablets e desktops.
 
 ### Backend
+- API RESTful em Express v5 + Node.js 22;
+- Modelagem e persistência com Prisma ORM v6 e PostgreSQL 16;
+- Autenticação stateless via JWT com senhas criptografadas em bcrypt;
+- Rotas de receitas, categorias, chefs, avaliações, favoritos e pedidos;
+- Rotas do Chef (`/api/recipes/mine`, `/api/recipes` com suporte a kits);
+- Endpoint de monitoramento `/api/health`;
+- **Suíte de Testes de Integração:** 13 testes automatizados nativos (`npm test`), 100% aprovados.
 
-- Estrutura do servidor;
-- API REST;
-- Node.js + Express;
-- Prisma;
-- PostgreSQL;
-- JWT;
-- bcrypt;
-- Cadastro;
-- Login;
-- Controle de autenticação;
-- Usuário autenticado;
-- Receitas;
-- Categorias;
-- Avaliações;
-- Favoritos;
-- Pedidos;
-- Seed de dados para testes.
-
-### Banco de dados
-
-- PostgreSQL instalado;
-- Banco GastroMatch criado;
-- Prisma configurado;
-- Schema definido;
-- Integração com backend.
+### Documentação Acadêmica Entregue (`/Documentacao`)
+- [ERS - Especificação de Requisitos de Software](file:///Users/yasminlobo/Documents/GitHub/GastroMatch/Documentacao/ERS_Especificacao_de_Requisitos.md)
+- [Backlog do Produto e das Sprints](file:///Users/yasminlobo/Documents/GitHub/GastroMatch/Documentacao/BACKLOG.md)
+- [Documentação da API REST](file:///Users/yasminlobo/Documents/GitHub/GastroMatch/Documentacao/DOCUMENTACAO_API.md)
+- [Coleção Oficial do Postman](file:///Users/yasminlobo/Documents/GitHub/GastroMatch/Documentacao/GastroMatch_API.postman_collection.json)
+- [Relatório de Testes e Evidências](file:///Users/yasminlobo/Documents/GitHub/GastroMatch/Documentacao/TESTES_E_EVIDENCIAS.md)
+- [Registro de Decisões Técnicas, Dificuldades e Escopo](file:///Users/yasminlobo/Documents/GitHub/GastroMatch/Documentacao/REGISTRO_DECISOES_E_ESCOPO.md)
+- Diagramas DER, Diagramas de Sequência (DS) e Protótipos.
 
 ---
 
-# 24. Próximas etapas
+# 24. Próximas etapas (Pós-MVP)
 
-- Página completa de detalhes da receita;
-- Validação de chefs/restaurantes;
-- Publicação de receitas pelo chef;
-- Sistema de compra de conteúdos;
-- Vídeos e materiais digitais;
-- Kits de ingredientes;
-- Geolocalização;
-- Gateway de pagamento;
-- Storage para arquivos;
-- Integração com delivery;
-- Aplicação mobile;
-- Deploy na AWS Academy;
-- Monitoramento da aplicação;
-- Testes automatizados.
+- Conexão com gateway de pagamento comercial em produção (ex: Asaas / Mercado Pago);
+- Upload direto de mídia via bucket S3 / Cloud Storage;
+- Finalização da aplicação mobile (Expo / React Native);
+- Deploy em infraestrutura de nuvem (AWS Academy).
 
 ---
 

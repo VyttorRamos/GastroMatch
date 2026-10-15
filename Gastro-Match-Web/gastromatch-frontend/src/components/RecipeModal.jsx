@@ -261,6 +261,19 @@ export default function RecipeModal({ recipe, onClose, onAddToCart }) {
         </div>
 
         <div className="recipe-modal-footer">
+          {recipe.hasKit !== false && (
+            <label className="include-kit-checkbox-label">
+              <input
+                type="checkbox"
+                checked={includeKit}
+                onChange={(e) => setIncludeKit(e.target.checked)}
+              />
+              <span>
+                <Icon name="bag" size={15} /> Incluir Kit de Ingredientes Físico (+ R$ {formatPrice(kitPrice)})
+              </span>
+            </label>
+          )}
+
           <div className="modal-total">
             <span>Total:</span>
             <strong>R$ {formatPrice(includeKit ? recipePrice + kitPrice + (freteResult?.valorFrete || 0) : recipePrice)}</strong>

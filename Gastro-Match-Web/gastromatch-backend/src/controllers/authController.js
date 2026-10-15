@@ -4,7 +4,8 @@ const { createToken } = require("../utils/jwt");
 
 const publicUser = user => ({
   id: user.id, name: user.name, email: user.email,
-  role: user.role, avatarUrl: user.avatarUrl, createdAt: user.createdAt
+  role: user.role, avatarUrl: user.avatarUrl, createdAt: user.createdAt,
+  chef: user.chef || null
 });
 
 async function register(req, res) {
@@ -44,7 +45,8 @@ async function login(req, res) {
       return res.status(400).json({ message: "Email e senha são obrigatórios." });
 
     const user = await prisma.user.findUnique({
-      where: { email: email.trim().toLowerCase() }
+      where: { email: email.trim().toLowerCase() },
+      include: { chef: true }
     });
 
     if (!user || !(await bcrypt.compare(password, user.passwordHash)))

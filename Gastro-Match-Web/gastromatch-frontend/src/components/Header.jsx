@@ -1,8 +1,9 @@
 import Icon from "./Icon";
 import { useAuth } from "../services/AuthContext";
 
-export default function Header({ search, setSearch, menuOpen, setMenuOpen, onAuth, cartCount = 0, onOpenCart, onOpenChefModal }) {
+export default function Header({ search, setSearch, menuOpen, setMenuOpen, onAuth, cartCount = 0, onOpenCart, onOpenChefModal, onOpenChefDashboard }) {
   const { user, logout } = useAuth();
+  const isChefOrAdmin = user && (user.role === "CHEF" || user.role === "ADMIN" || Boolean(user.chef));
 
   return (
     <header className="header">
@@ -24,9 +25,16 @@ export default function Header({ search, setSearch, menuOpen, setMenuOpen, onAut
 
         <nav className={`nav ${menuOpen ? "open" : ""}`}>
           <a href="#receitas">Explorar</a>
-          <button className="text-nav-btn" onClick={onOpenChefModal}>
-            Seja um Chef
-          </button>
+
+          {isChefOrAdmin ? (
+            <button className="chef-nav-highlight-btn" onClick={onOpenChefDashboard}>
+              <Icon name="chef" size={16} /> Painel do Chef
+            </button>
+          ) : (
+            <button className="text-nav-btn" onClick={onOpenChefModal}>
+              Seja um Chef
+            </button>
+          )}
 
           <button className="icon-button" onClick={onOpenCart} aria-label="Sacola">
             <Icon name="bag" size={19} />
@@ -35,7 +43,10 @@ export default function Header({ search, setSearch, menuOpen, setMenuOpen, onAut
 
           {user ? (
             <div className="user-area">
-              <span className="user-name">Olá, {user.name.split(" ")[0]}</span>
+              <span className="user-name">
+                {isChefOrAdmin && <span className="chef-inline-badge">CHEF</span>}
+                Olá, {user.name.split(" ")[0]}
+              </span>
               <button className="button button-small" onClick={logout}>Sair</button>
             </div>
           ) : (
