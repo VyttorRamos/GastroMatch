@@ -4,6 +4,8 @@ import { useAuth } from "../services/AuthContext";
 export default function Header({ search, setSearch, menuOpen, setMenuOpen, onAuth, cartCount = 0, onOpenCart, onOpenChefDashboard, onOpenOrders }) {
   const { user, logout } = useAuth();
   const isChefOrAdmin = user && (user.role === "CHEF" || user.role === "ADMIN" || Boolean(user.chef));
+  const rawName = user?.chef?.displayName || user?.name || "Usuário";
+  const firstName = rawName.replace(/^Chef\s+/i, "").trim().split(" ")[0] || "Chef";
 
   return (
     <header className="header">
@@ -57,7 +59,7 @@ export default function Header({ search, setSearch, menuOpen, setMenuOpen, onAut
               </button>
               <span className="user-name">
                 {isChefOrAdmin && <span className="chef-inline-badge">CHEF</span>}
-                Olá, {user.name.split(" ")[0]}
+                Olá, {firstName}
               </span>
               <button
                 className="button button-small"
