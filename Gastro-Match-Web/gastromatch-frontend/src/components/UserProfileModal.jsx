@@ -1,15 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Icon from "./Icon";
 import { useAuth } from "../services/AuthContext";
-
-const AVATAR_OPTIONS = [
-  { id: "chef1", label: "Chef Tradicional", url: "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=200&q=80" },
-  { id: "chef2", label: "Chef Confeiteira", url: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80" },
-  { id: "gourmet", label: "Apreciador Gourmet", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" },
-  { id: "pasticceria", label: "Sommelier", url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80" },
-  { id: "artisan", label: "Cozinheiro Criativo", url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80" },
-  { id: "asian", label: "Mestre Oriental", url: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=200&q=80" }
-];
 
 const DIETARY_OPTIONS = [
   "Vegetariano",
@@ -52,6 +43,56 @@ export default function UserProfileModal({ onClose }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   const [searchingCep, setSearchingCep] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setMessage({ type: "error", text: "Por favor, selecione um arquivo de imagem (PNG, JPG, WebP)." });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setMessage({ type: "error", text: "A foto selecionada ultrapassa 10MB." });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_DIM = 400;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_DIM) {
+            height = Math.round((height * MAX_DIM) / width);
+            width = MAX_DIM;
+          }
+        } else {
+          if (height > MAX_DIM) {
+            width = Math.round((width * MAX_DIM) / height);
+            height = MAX_DIM;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+        setAvatarUrl(dataUrl);
+        setMessage({ type: "success", text: "Foto carregada com sucesso! Clique em 'Salvar' abaixo para confirmar." });
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     if (user) {
@@ -285,29 +326,66 @@ export default function UserProfileModal({ onClose }) {
                 />
               </label>
 
-              <div className="avatar-picker-section">
-                <span>Escolha seu Avatar Culinário ou informe uma URL:</span>
-                <div className="avatar-options-grid">
-                  {AVATAR_OPTIONS.map((av) => (
+              <div className="avatar-upload-zone">
+                <span className="avatar-upload-title">Foto de Perfil (Upload)</span>
+                
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png, image/jpeg, image/jpg, image/webp"
+                  style={{ display: "none" }}
+                  onChange={handleFileUpload}
+                />
+
+                <div className="avatar-upload-content-box">
+                  <div className="avatar-upload-preview-box">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt={name || "Avatar"} className="avatar-upload-img" />
+                    ) : (
+                      <div className="avatar-upload-placeholder">
+                        <Icon name="chef" size={34} />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="avatar-upload-controls">
                     <button
-                      key={av.id}
                       type="button"
-                      className={`avatar-option-btn ${avatarUrl === av.url ? "selected" : ""}`}
-                      onClick={() => setAvatarUrl(av.url)}
+                      className="button button-orange avatar-btn-upload"
+                      onClick={() => fileInputRef.current?.click()}
                     >
-                      <img src={av.url} alt={av.label} />
-                      <small>{av.label}</small>
+                      <Icon name="arrow" size={16} /> Escolher Foto do Computador
                     </button>
-                  ))}
+
+                    {avatarUrl && (
+                      <button
+                        type="button"
+                        className="button button-outline button-small btn-remove-photo"
+                        onClick={() => {
+                          setAvatarUrl("");
+                          setMessage({ type: "info", text: "Foto removida. Suas iniciais serão exibidas no perfil." });
+                        }}
+                      >
+                        <Icon name="x" size={14} /> Remover Foto
+                      </button>
+                    )}
+
+                    <span className="avatar-upload-hint">
+                      Formatos aceitos: JPG, PNG, WebP (máx. 10MB). A foto será redimensionada e ajustada automaticamente.
+                    </span>
+                  </div>
                 </div>
 
-                <div className="custom-avatar-input">
-                  <input
-                    type="url"
-                    placeholder="Ou cole a URL da sua foto (ex: https://...)"
-                    value={avatarUrl}
-                    onChange={(e) => setAvatarUrl(e.target.value)}
-                  />
+                <div className="custom-avatar-url-toggle">
+                  <label className="form-field" style={{ marginBottom: 0 }}>
+                    <span>Ou informe a URL direta de uma foto:</span>
+                    <input
+                      type="url"
+                      placeholder="https://exemplo.com/minha-foto.jpg"
+                      value={avatarUrl.startsWith("data:") ? "" : avatarUrl}
+                      onChange={(e) => setAvatarUrl(e.target.value)}
+                    />
+                  </label>
                 </div>
               </div>
             </div>

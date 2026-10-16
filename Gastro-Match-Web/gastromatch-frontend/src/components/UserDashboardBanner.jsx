@@ -4,6 +4,7 @@ import { useAuth } from "../services/AuthContext";
 export default function UserDashboardBanner({
   onOpenProfile,
   onOpenOrders,
+  onOpenFavorites,
   onFilterFavorites,
   favoriteCount = 0,
   ordersCount = 0
@@ -80,7 +81,7 @@ export default function UserDashboardBanner({
             </div>
 
             {/* Card 2: Favoritos */}
-            <div className="user-kpi-card" onClick={onFilterFavorites}>
+            <div className="user-kpi-card" onClick={onOpenFavorites || onFilterFavorites}>
               <div className="kpi-icon-wrap red">
                 <Icon name="heart" size={22} />
               </div>

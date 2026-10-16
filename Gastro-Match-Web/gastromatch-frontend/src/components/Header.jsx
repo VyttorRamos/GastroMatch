@@ -13,6 +13,7 @@ export default function Header({
   onOpenChefDashboard,
   onOpenOrders,
   onOpenProfile,
+  onOpenFavorites,
   onFilterFavorites
 }) {
   const { user, logout } = useAuth();
@@ -141,7 +142,11 @@ export default function Header({
                       <button
                         type="button"
                         onClick={() => {
-                          onFilterFavorites && onFilterFavorites();
+                          if (onOpenFavorites) {
+                            onOpenFavorites();
+                          } else if (onFilterFavorites) {
+                            onFilterFavorites();
+                          }
                           setDropdownOpen(false);
                           setMenuOpen(false);
                         }}

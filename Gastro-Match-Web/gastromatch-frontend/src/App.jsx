@@ -15,6 +15,7 @@ import ChefDashboardPage from "./components/ChefDashboardPage";
 import CustomerOrdersModal from "./components/CustomerOrdersModal";
 import UserProfileModal from "./components/UserProfileModal";
 import UserDashboardBanner from "./components/UserDashboardBanner";
+import FavoritesModal from "./components/FavoritesModal";
 import { AuthProvider, useAuth } from "./services/AuthContext";
 import { api } from "./services/api";
 
@@ -83,6 +84,7 @@ function GastroMatchApp() {
   const [authOpen, setAuthOpen] = useState(false);
   const [ordersModalOpen, setOrdersModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [favoritesModalOpen, setFavoritesModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState("store"); // "store" | "chef"
   const [selectedChef, setSelectedChef] = useState(null);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
@@ -248,6 +250,7 @@ function GastroMatchApp() {
         onOpenChefDashboard={() => setCurrentView("chef")}
         onOpenOrders={() => setOrdersModalOpen(true)}
         onOpenProfile={() => setProfileModalOpen(true)}
+        onOpenFavorites={() => setFavoritesModalOpen(true)}
         onFilterFavorites={() => {
           setSelectedCategory("Favoritos ❤️");
           scrollToRecipes();
@@ -296,6 +299,7 @@ function GastroMatchApp() {
           <UserDashboardBanner
             onOpenProfile={() => setProfileModalOpen(true)}
             onOpenOrders={() => setOrdersModalOpen(true)}
+            onOpenFavorites={() => setFavoritesModalOpen(true)}
             onFilterFavorites={() => {
               setSelectedCategory("Favoritos ❤️");
               scrollToRecipes();
@@ -489,6 +493,15 @@ function GastroMatchApp() {
         <CustomerOrdersModal
           onClose={() => setOrdersModalOpen(false)}
           onOpenRecipe={(rec) => setSelectedRecipe(rec)}
+        />
+      )}
+      {favoritesModalOpen && (
+        <FavoritesModal
+          favoriteIds={favoriteIds}
+          recipes={recipes}
+          onClose={() => setFavoritesModalOpen(false)}
+          onSelectRecipe={(rec) => setSelectedRecipe(rec)}
+          onToggleFavorite={handleToggleFavorite}
         />
       )}
       {selectedChef && (
