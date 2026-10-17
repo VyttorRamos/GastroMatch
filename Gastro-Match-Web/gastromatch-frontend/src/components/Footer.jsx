@@ -4,8 +4,7 @@ export default function Footer() {
       <div className="container footer-grid">
         <div>
           <a className="brand brand-footer" href="/">
-            <span className="brand-mark">GM</span>
-            <span>GastroMatch</span>
+            <img className="brand-logo" src="/gastromatch-logo.png" alt="GastroMatch" />
           </a>
           <p>Conectando pessoas a chefs e restaurantes para experiências gastronômicas autênticas.</p>
         </div>

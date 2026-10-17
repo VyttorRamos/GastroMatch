@@ -1,0 +1,55 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Arquitetura GastroMatch" id="0">
+    <mxGraphModel dx="1471" dy="803" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="usuarios" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=16;fontStyle=1;spacing=15;" value="USUÁRIOS&#xa;&#xa;Navegador Web&#xa;(Desktop / Notebook)&#xa;&#xa;Aplicativo Mobile&#xa;(React Native / Expo)" vertex="1">
+          <mxGeometry height="260" width="230" x="40" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="frontend" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=15;fontStyle=1;spacing=15;" value="FRONT-END&#xa;&#xa;React + Vite&#xa;&#xa;• Interface do usuário&#xa;• Navegação e rotas&#xa;• Busca e filtros&#xa;• Cards de receitas&#xa;• Login e cadastro&#xa;• Consumo da API" vertex="1">
+          <mxGeometry height="320" width="280" x="350" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="backend" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=15;fontStyle=1;spacing=15;" value="BACK-END / API&#xa;&#xa;Node.js + Express + Prisma&#xa;&#xa;• Regras de negócio&#xa;• API REST&#xa;• Autenticação&#xa;• JWT + bcrypt&#xa;• Processamento de requisições&#xa;• Endpoints&#xa;• Integração com banco" vertex="1">
+          <mxGeometry height="360" width="310" x="710" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="database" parent="1" style="shape=cylinder;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=15;fontStyle=1;spacing=15;" value="BANCO DE DADOS&#xa;&#xa;PostgreSQL&#xa;&#xa;• Usuários&#xa;• Receitas&#xa;• Categorias&#xa;• Avaliações&#xa;• Favoritos&#xa;• Pedidos&#xa;• Demais dados da plataforma" vertex="1">
+          <mxGeometry height="300" width="270" x="1100" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="aws" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=15;fontStyle=1;spacing=15;" value="INFRAESTRUTURA EM NUVEM&#xa;&#xa;AWS Academy&#xa;&#xa;Hospedagem e implantação&#xa;da aplicação" vertex="1">
+          <mxGeometry height="150" width="300" x="1090" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="integracoes" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5f5ff;strokeColor=#5bc0de;fontSize=15;fontStyle=1;spacing=15;" value="INTEGRAÇÕES EXTERNAS&#xa;&#xa;Pagamentos&#xa;Mapas / Geolocalização&#xa;Storage / CDN&#xa;Delivery&#xa;&#xa;(Planejadas)" vertex="1">
+          <mxGeometry height="180" width="390" x="570" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="seguranca" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=14;fontStyle=1;" value="SEGURANÇA&#xa;JWT • bcrypt • Controle de acesso" vertex="1">
+          <mxGeometry height="80" width="390" x="60" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="edge1" edge="1" parent="1" source="usuarios" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeWidth=2;fontSize=13;" target="frontend" value="HTTPS / REST">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge2" edge="1" parent="1" source="frontend" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeWidth=2;fontSize=13;" target="backend" value="HTTPS / REST API">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge3" edge="1" parent="1" source="backend" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeWidth=2;fontSize=13;" target="database" value="Prisma / SQL">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge4" edge="1" parent="1" source="backend" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeWidth=2;fontSize=13;dashed=1;" target="integracoes" value="APIs / Serviços">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge5" edge="1" parent="1" source="database" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeWidth=2;dashed=1;fontSize=13;" target="aws" value="Hospedagem / Cloud">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge6" edge="1" parent="1" source="integracoes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeWidth=2;dashed=1;fontSize=13;" target="aws" value="Infraestrutura">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=26;fontStyle=1;fontColor=#1a1a1a;" value="GastroMatch — Arquitetura da Solução" vertex="1">
+          <mxGeometry height="60" width="700" x="40" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=16;fontColor=#666666;" value="Conexão e Experiência Gastronômica" vertex="1">
+          <mxGeometry height="40" width="500" x="40" y="105" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -28,7 +28,7 @@ async function main() {
   // 2. Usuário Administrador
   const adminUser = await prisma.user.upsert({
     where: { email: "admin@gastromatch.com" },
-    update: { passwordHash },
+    update: {},
     create: {
       name: "Administrador GastroMatch",
       email: "admin@gastromatch.com",
@@ -94,7 +94,7 @@ async function main() {
   for (const c of chefsData) {
     const user = await prisma.user.upsert({
       where: { email: c.email },
-      update: { name: c.name, passwordHash },
+      update: {},
       create: {
         name: c.name,
         email: c.email,
@@ -377,10 +377,7 @@ async function main() {
 
   console.log("\n=============================================");
   console.log("Banco populado com sucesso!");
-  console.log("Contas de teste prontas:");
-  console.log(" - Admin: admin@gastromatch.com / 123456");
-  console.log(" - Chef:  gabriel@gastromatch.com / 123456");
-  console.log(" - Chef:  yasmin@gastromatch.com / 123456");
+  console.log("Contas de demonstração foram criadas somente se ainda não existiam (senha inicial: 123456).");
   console.log("=============================================");
 }
 

@@ -39,8 +39,7 @@ export default function Header({
     <header className="header">
       <div className="container header-inner">
         <a className="brand" href="/" aria-label="GastroMatch">
-          <span className="brand-mark">GM</span>
-          <span>GastroMatch</span>
+          <img className="brand-logo" src="/gastromatch-logo.png" alt="GastroMatch" />
         </a>
 
         <div className="search-box">

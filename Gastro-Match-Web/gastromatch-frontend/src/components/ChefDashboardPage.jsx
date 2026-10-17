@@ -282,7 +282,7 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
               </button>
               <div className="brand-divider"></div>
               <div className="chef-brand-identity">
-                <span className="brand-mark-mini">GM</span>
+                <img className="brand-mark-mini" src="/gastromatch-icon.png" alt="GastroMatch" />
                 <div className="chef-brand-text-col">
                   <span className="chef-page-portal-title">Portal do Chef</span>
                   <span className="chef-page-portal-sub">Acesso para Cozinhas & Parceiros GastroMatch</span>
@@ -554,7 +554,7 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
             </button>
             <div className="brand-divider"></div>
             <div className="chef-brand-identity">
-              <span className="brand-mark-mini">GM</span>
+              <img className="brand-mark-mini" src="/gastromatch-icon.png" alt="GastroMatch" />
               <div className="chef-brand-text-col">
                 <span className="chef-page-portal-title">Portal do Chef</span>
                 <span className="chef-page-portal-sub">Painel de Gestão Culinária & Vendas</span>
