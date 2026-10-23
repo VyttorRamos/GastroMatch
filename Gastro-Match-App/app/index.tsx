@@ -33,7 +33,7 @@ export default function LoginScreen() {
         <Text style={styles.title}>Tem sabor de{ '\n' }casa por aqui.</Text>
         <Text style={styles.subtitle}>Entre para descobrir receitas feitas por quem ama cozinhar.</Text>
         <Text style={styles.label}>E-mail</Text>
-        <TextInput style={styles.input} placeholder="voce@email.com" placeholderTextColor="#a69a91" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} returnKeyType="next" />
+        <TextInput style={styles.input} placeholder="exemplo@email.com" placeholderTextColor="#a69a91" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} returnKeyType="next" />
         <Text style={styles.label}>Senha</Text>
         <TextInput style={styles.input} placeholder="Sua senha" placeholderTextColor="#a69a91" value={password} onChangeText={setPassword} secureTextEntry returnKeyType="go" onFocus={() => setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 250)} onSubmitEditing={handleLogin} />
         <Pressable style={[styles.button, busy && { opacity: 0.7 }]} onPress={handleLogin} disabled={busy}>{busy ? <ActivityIndicator color="#fffEED" /> : <Text style={styles.buttonText}>Entrar na minha conta  →</Text>}</Pressable>

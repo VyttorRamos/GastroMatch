@@ -46,3 +46,8 @@ build/
 
 # Temporary folders
 .system_generated/
+
+# Unity Android build artifacts
+GastroMatch-AR/.utmp/
+GastroMatch-AR/*_BurstDebugInformation_DoNotShip/
+GastroMatch-AR/*.apk
