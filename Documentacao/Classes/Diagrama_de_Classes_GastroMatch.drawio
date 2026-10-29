@@ -1,0 +1,144 @@
+<mxfile host="app.diagrams.net" agent="Codex">
+  <diagram id="class-gastromatch" name="Diagrama de Classes">
+    <mxGraphModel dx="1746" dy="959" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1450" pageHeight="1050" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="r1" edge="1" parent="1" source="user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERzeroToOne;endFill=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0" target="profile">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r2" edge="1" parent="1" source="user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERzeroToOne;endFill=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0" target="chef">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r3" edge="1" parent="1" source="chef" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0" target="chefdoc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r4" edge="1" parent="1" source="user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0" target="recipe">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r5" edge="1" parent="1" source="chef" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERzeroToOne;startFill=0;endArrow=ERmany;endFill=0;exitX=0.1;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0;entryDx=0;entryDy=0" target="recipe">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="760" y="255" />
+              <mxPoint x="720" y="255" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r6" edge="1" parent="1" source="category" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERzeroToOne;startFill=0;endArrow=ERmany;endFill=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.1;entryDx=0;entryDy=0" target="recipe">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="360" y="342" />
+              <mxPoint x="360" y="342" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r7" edge="1" parent="1" source="user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0" target="review">
+          <mxGeometry relative="1" x="0.0013" as="geometry">
+            <Array as="points">
+              <mxPoint x="550" y="220" />
+              <mxPoint x="710" y="220" />
+              <mxPoint x="710" y="410" />
+              <mxPoint x="705" y="410" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r8" edge="1" parent="1" source="recipe" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.65;entryDx=0;entryDy=0" target="review">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="590" y="397.5" />
+              <mxPoint x="590" y="531.4" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r9" edge="1" parent="1" source="user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0" target="favorite">
+          <mxGeometry relative="1" x="0.4528" as="geometry">
+            <Array as="points">
+              <mxPoint x="385" y="240" />
+              <mxPoint x="350" y="240" />
+              <mxPoint x="350" y="940" />
+              <mxPoint x="637.5" y="940" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r10" edge="1" parent="1" source="recipe" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0" target="favorite">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="550" y="730" />
+              <mxPoint x="705" y="730" />
+              <mxPoint x="705" y="755" />
+              <mxPoint x="637.5" y="755" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r11" edge="1" parent="1" source="user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0" target="order">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="700" y="99.6" />
+              <mxPoint x="700" y="270" />
+              <mxPoint x="905" y="270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r12" edge="1" parent="1" source="order" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="orderitem">
+          <mxGeometry relative="1" x="-0.2267" as="geometry">
+            <Array as="points">
+              <mxPoint x="905" y="683" />
+              <mxPoint x="940" y="683" />
+              <mxPoint x="940" y="840" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r13" edge="1" parent="1" source="recipe" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0" target="orderitem">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="550" y="730" />
+              <mxPoint x="817.5" y="730" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r14" edge="1" parent="1" source="recipe" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0" target="recipeingredient">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r15" edge="1" parent="1" source="ingredient" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0" target="recipeingredient">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="profile" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=0;fontSize=12;fillColor=#ffffff;strokeColor=#64748b;" value="&lt;div style=&quot;font-weight:bold;text-align:center;background-color:#eaf1f8;padding:5px;border-bottom:1px solid #94a3b8&quot;&gt;Perfil&lt;/div&gt;&lt;div style=&quot;padding-top:3px&quot;&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;PK  id INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;FK  usuarioId INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;telefone VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;cidade VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;estado VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;pais VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;preferencias JSON&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="156" width="125" x="30" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="user" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=0;fontSize=12;fillColor=#ffffff;strokeColor=#64748b;" value="&lt;div style=&quot;font-weight:bold;text-align:center;background-color:#eaf1f8;padding:5px;border-bottom:1px solid #94a3b8&quot;&gt;Usuario&lt;/div&gt;&lt;div style=&quot;padding-top:3px&quot;&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;PK  id INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;nome VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;email VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;senhaHash VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;funcao VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;avatarUrl VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;criadoEm TIMESTAMP&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;atualizadoEm TIMESTAMP&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="174" width="165" x="385" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="chef" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=0;fontSize=12;fillColor=#ffffff;strokeColor=#64748b;" value="&lt;div style=&quot;font-weight:bold;text-align:center;background-color:#eaf1f8;padding:5px;border-bottom:1px solid #94a3b8&quot;&gt;Chef&lt;/div&gt;&lt;div style=&quot;padding-top:3px&quot;&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;PK  id INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;FK  usuarioId INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;nomeExibicao VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;descricao VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;restaurante VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;cnpj VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;status VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;criadoEm TIMESTAMP&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;atualizadoEm TIMESTAMP&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="192" width="165" x="740" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="chefdoc" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=0;fontSize=12;fillColor=#ffffff;strokeColor=#64748b;" value="&lt;div style=&quot;font-weight:bold;text-align:center;background-color:#eaf1f8;padding:5px;border-bottom:1px solid #94a3b8&quot;&gt;DocumentoChef&lt;/div&gt;&lt;div style=&quot;padding-top:3px&quot;&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;PK  id INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;FK  chefId INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;tipo VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;fileUrl VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;criadoEm TIMESTAMP&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="120" width="135" x="940" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="category" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=0;fontSize=12;fillColor=#ffffff;strokeColor=#64748b;" value="&lt;div style=&quot;font-weight:bold;text-align:center;background-color:#eaf1f8;padding:5px;border-bottom:1px solid #94a3b8&quot;&gt;Categoria&lt;/div&gt;&lt;div style=&quot;padding-top:3px&quot;&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;PK  id INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;nome VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;descricao VARCHAR&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="84" width="125" x="30" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="recipe" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=0;fontSize=12;fillColor=#ffffff;strokeColor=#64748b;" value="&lt;div style=&quot;font-weight:bold;text-align:center;background-color:#eaf1f8;padding:5px;border-bottom:1px solid #94a3b8&quot;&gt;Receita&lt;/div&gt;&lt;div style=&quot;padding-top:3px&quot;&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;PK  id INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;titulo VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;descricao VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;instrucoes TEXT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;imageUrl VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;videoUrl VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;preco DECIMAL&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;temKit BOOLEAN&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;precoKit DECIMAL&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;estoqueKit INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;descricaoKit VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;tempoPreparo INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;porcoes INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;dificuldade VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;publicada BOOLEAN&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;FK  autorId INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;FK  chefId INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;FK  categoriaId INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;criadoEm TIMESTAMP&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;atualizadoEm TIMESTAMP&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="390" width="135" x="415" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="review" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=0;fontSize=12;fillColor=#ffffff;strokeColor=#64748b;" value="&lt;div style=&quot;font-weight:bold;text-align:center;background-color:#eaf1f8;padding:5px;border-bottom:1px solid #94a3b8&quot;&gt;Avaliacao&lt;/div&gt;&lt;div style=&quot;padding-top:3px&quot;&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;PK  id INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;nota INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;comentario VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;FK  usuarioId INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;FK  receitaId INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;criadoEm TIMESTAMP&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;atualizadoEm TIMESTAMP&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="156" width="165" x="630" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="order" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=0;fontSize=12;fillColor=#ffffff;strokeColor=#64748b;" value="&lt;div style=&quot;font-weight:bold;text-align:center;background-color:#eaf1f8;padding:5px;border-bottom:1px solid #94a3b8&quot;&gt;Pedido&lt;/div&gt;&lt;div style=&quot;padding-top:3px&quot;&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;PK  id INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;FK  usuarioId INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;status VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;total DECIMAL&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;criadoEm TIMESTAMP&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;atualizadoEm TIMESTAMP&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="150" width="165" x="822.5" y="436" as="geometry" />
+        </mxCell>
+        <mxCell id="ingredient" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=0;fontSize=12;fillColor=#ffffff;strokeColor=#64748b;" value="&lt;div style=&quot;font-weight:bold;text-align:center;background-color:#eaf1f8;padding:5px;border-bottom:1px solid #94a3b8&quot;&gt;Ingrediente&lt;/div&gt;&lt;div style=&quot;padding-top:3px&quot;&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;PK  id INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;nome VARCHAR&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;criadoEm TIMESTAMP&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="84" width="135" x="30" y="780" as="geometry" />
+        </mxCell>
+        <mxCell id="recipeingredient" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=0;fontSize=12;fillColor=#ffffff;strokeColor=#64748b;" value="&lt;div style=&quot;font-weight:bold;text-align:center;background-color:#eaf1f8;padding:5px;border-bottom:1px solid #94a3b8&quot;&gt;ReceitaIngrediente&lt;/div&gt;&lt;div style=&quot;padding-top:3px&quot;&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;PK  id INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;FK  receitaId INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;FK  ingredienteId INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;quantidade VARCHAR&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="102" width="135" x="385" y="780" as="geometry" />
+        </mxCell>
+        <mxCell id="favorite" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=0;fontSize=12;fillColor=#ffffff;strokeColor=#64748b;" value="&lt;div style=&quot;font-weight:bold;text-align:center;background-color:#eaf1f8;padding:5px;border-bottom:1px solid #94a3b8&quot;&gt;Favorito&lt;/div&gt;&lt;div style=&quot;padding-top:3px&quot;&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;PK  id INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;FK  usuarioId INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;FK  receitaId INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;criadoEm TIMESTAMP&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="102" width="135" x="570" y="780" as="geometry" />
+        </mxCell>
+        <mxCell id="orderitem" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=0;fontSize=12;fillColor=#ffffff;strokeColor=#64748b;" value="&lt;div style=&quot;font-weight:bold;text-align:center;background-color:#eaf1f8;padding:5px;border-bottom:1px solid #94a3b8&quot;&gt;ItemPedido&lt;/div&gt;&lt;div style=&quot;padding-top:3px&quot;&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;PK  id INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;FK  pedidoId INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;FK  receitaId INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;quantidade INT&lt;/div&gt;&lt;div style=&quot;padding:1px 5px&quot;&gt;precoUnitario DECIMAL&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="120" width="135" x="750" y="780" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

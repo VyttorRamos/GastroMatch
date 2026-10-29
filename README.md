@@ -94,56 +94,19 @@ Futuramente, a arquitetura poderá ser expandida para:
 
 # 7. Estrutura do projeto
 
-O projeto possui frontend e backend separados.
+O projeto web está dentro de `Gastro-Match-Web` e possui frontend e backend separados. O banco PostgreSQL usado pelo backend está hospedado no Supabase.
 
 ```text
 GastroMatch/
-│
-├── gastromatch-frontend/
-│   │
-│   ├── public/
-│   │
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── Header.jsx
-│   │   │   ├── RecipeCard.jsx
-│   │   │   ├── Stats.jsx
-│   │   │   ├── Footer.jsx
-│   │   │   └── AuthModal.jsx
-│   │   │
-│   │   ├── services/
-│   │   │   ├── api.js
-│   │   │   └── AuthContext.jsx
-│   │   │
-│   │   ├── styles/
-│   │   │   └── global.css
-│   │   │
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   │
-│   ├── index.html
-│   ├── package.json
-│   ├── vite.config.js
-│   └── .env
-│
-├── gastromatch-backend/
-│   │
-│   ├── prisma/
-│   │   ├── schema.prisma
-│   │   └── seed.js
-│   │
-│   ├── src/
-│   │   ├── config/
-│   │   ├── controllers/
-│   │   ├── middleware/
-│   │   ├── routes/
-│   │   └── server.js
-│   │
-│   ├── package.json
-│   ├── .env
-│   └── README.md
-│
-└── README.md
+├── Gastro-Match-Web/
+│   ├── gastromatch-frontend/
+│   └── gastromatch-backend/
+│       ├── prisma/
+│       ├── scripts/configure-supabase.ps1
+│       └── src/
+├── Gastro-Match-App/
+├── GastroMatch-AR/
+└── Documentacao/
 ```
 
 ---
@@ -324,7 +287,7 @@ GastroMatch API rodando em http://localhost:3000
 
 # 11. Banco de dados
 
-O banco utiliza **PostgreSQL**, com o gerenciamento das tabelas realizado pelo **Prisma ORM**.
+O banco utiliza **PostgreSQL hospedado no Supabase**, com o gerenciamento das tabelas realizado pelo **Prisma ORM**. O backend Express conecta-se diretamente ao banco usando as URLs de conexão do Supabase; a autenticação da aplicação continua sendo feita pela API GastroMatch com JWT.
 
 O banco é responsável por armazenar informações como:
 
@@ -346,16 +309,16 @@ O schema do banco está localizado em:
 gastromatch-backend/prisma/schema.prisma
 ```
 
-Para sincronizar o schema com o banco:
+Para sincronizar o schema com o banco Supabase (use com cuidado em ambientes compartilhados, pois `db push` altera a estrutura do banco):
 
 ```bash
-npx prisma db push
+npm run db:push
 ```
 
 Para gerar o cliente Prisma:
 
 ```bash
-npx prisma generate
+npm run prisma:generate
 ```
 
 ---
@@ -388,17 +351,17 @@ Esses usuários são utilizados apenas para testes durante o desenvolvimento.
 
 - Node.js;
 - npm;
-- PostgreSQL;
+- Conta/projeto ativo no Supabase;
 - Visual Studio Code, recomendado.
 
 ---
 
 # 14. Configuração do Backend
 
-Entre na pasta:
+Entre na pasta do backend:
 
 ```bash
-cd gastromatch-backend
+cd Gastro-Match-Web\gastromatch-backend
 ```
 
 Instale as dependências:
@@ -407,34 +370,44 @@ Instale as dependências:
 npm install
 ```
 
-Crie o arquivo:
+Crie o arquivo `.env` usando `.env.example` como referência. Configure as URLs PostgreSQL fornecidas pelo Supabase em **Connect** (use o host e as credenciais do seu próprio projeto):
 
 ```text
 .env
 ```
 
-Exemplo:
+Exemplo de formato — substitua os valores pelos dados do painel Supabase e nunca envie o arquivo `.env` ao Git:
 
 ```env
-DATABASE_URL="postgresql://postgres:SUA_SENHA@localhost:5432/gastromatch?schema=public"
+DATABASE_URL="postgresql://postgres.PROJECT_REF:SENHA@HOST_DO_POOLER:5432/postgres"
+DIRECT_URL="postgresql://postgres.PROJECT_REF:SENHA@HOST_DO_POOLER:5432/postgres"
 JWT_SECRET="gastromatch-chave-secreta"
 JWT_EXPIRES_IN="7d"
 PORT=3000
 FRONTEND_URL="http://localhost:5173"
 ```
 
-> A senha do PostgreSQL deve ser substituída pela senha definida durante a instalação do PostgreSQL.
+`DATABASE_URL` é usada pelo Prisma na conexão da aplicação; `DIRECT_URL` é usada para operações de schema. O exemplo do backend usa o pooler de sessão do Supabase na porta `5432`. Copie o host exato mostrado em **Connect**; não presuma que a região ou o hostname do exemplo corresponde ao seu projeto. Se a senha tiver caracteres especiais, ela precisa estar codificada para URL.
+
+O script abaixo solicita o host e a senha sem exibir a senha, grava as URLs no `.env`, gera o Prisma Client e sincroniza o schema. Use-o no PowerShell:
+
+```powershell
+cd Gastro-Match-Web\gastromatch-backend
+.\scripts\configure-supabase.ps1
+```
+
+Se preferir configurar o `.env` manualmente, obtenha os dados em **Supabase > Connect** e depois execute os comandos abaixo.
 
 Gere o Prisma Client:
 
 ```bash
-npx prisma generate
+npm run prisma:generate
 ```
 
 Sincronize o banco:
 
 ```bash
-npx prisma db push
+npm run db:push
 ```
 
 Execute o seed:
@@ -453,10 +426,10 @@ npm run dev
 
 # 15. Configuração do Frontend
 
-Entre na pasta:
+Entre na pasta do frontend:
 
 ```bash
-cd gastromatch-frontend
+cd Gastro-Match-Web\gastromatch-frontend
 ```
 
 Instale as dependências:
@@ -500,7 +473,7 @@ Para executar o GastroMatch localmente, são necessários dois terminais.
 ### Terminal 1 — Backend
 
 ```bash
-cd gastromatch-backend
+cd Gastro-Match-Web\gastromatch-backend
 npm run dev
 ```
 
@@ -513,7 +486,7 @@ GastroMatch API rodando em http://localhost:3000
 ### Terminal 2 — Frontend
 
 ```bash
-cd gastromatch-frontend
+cd Gastro-Match-Web\gastromatch-frontend
 npm run dev
 ```
 
@@ -605,7 +578,7 @@ Armazenamento e distribuição de:
 
 # 20. AWS Academy
 
-A infraestrutura em nuvem faz parte das próximas etapas do projeto.
+A infraestrutura em nuvem continua em avaliação para hospedagem do frontend e backend. Atualmente, o PostgreSQL do projeto web está no Supabase; a AWS Academy pode ser usada em etapas futuras para hospedar os demais componentes.
 
 A arquitetura planejada é:
 
@@ -627,8 +600,8 @@ A arquitetura planejada é:
           +-----------+-----------+
           |                       |
           v                       v
-    PostgreSQL                 Storage
-      AWS                     AWS Cloud
+    PostgreSQL                Storage
+    Supabase                AWS Cloud
           |
           v
     Dados do sistema
@@ -688,7 +661,7 @@ A implantação será realizada posteriormente utilizando os recursos disponíve
 
 ### Backend
 - API RESTful em Express v5 + Node.js 22;
-- Modelagem e persistência com Prisma ORM v6 e PostgreSQL 16;
+- Modelagem e persistência com Prisma ORM v6 e PostgreSQL no Supabase;
 - Autenticação stateless via JWT com senhas criptografadas em bcrypt;
 - Rotas de receitas, categorias, chefs, avaliações, favoritos e pedidos;
 - Rotas do Chef (`/api/recipes/mine`, `/api/recipes` com suporte a kits);

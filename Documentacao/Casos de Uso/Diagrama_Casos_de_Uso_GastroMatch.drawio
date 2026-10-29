@@ -1,0 +1,115 @@
+<mxfile host="app.diagrams.net" agent="Codex">
+  <diagram id="casos-uso-gastromatch" name="Casos de Uso">
+    <mxGraphModel dx="1537" dy="845" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="system" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=center;fontStyle=1;strokeWidth=2;" value="" vertex="1">
+          <mxGeometry height="800" width="900" x="300" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="validate" parent="system" style="ellipse;whiteSpace=wrap;html=1;" value="Validar Documentos" vertex="1">
+          <mxGeometry height="50" width="190" x="65" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="profile" parent="system" style="ellipse;whiteSpace=wrap;html=1;" value="Gerenciar Perfil" vertex="1">
+          <mxGeometry height="50" width="190" x="65" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="favorite" parent="system" style="ellipse;whiteSpace=wrap;html=1;" value="Favoritar Receita" vertex="1">
+          <mxGeometry height="50" width="190" x="65" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="rate" parent="system" style="ellipse;whiteSpace=wrap;html=1;" value="Avaliar Receita" vertex="1">
+          <mxGeometry height="50" width="190" x="65" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="order" parent="system" style="ellipse;whiteSpace=wrap;html=1;" value="Criar Pedido" vertex="1">
+          <mxGeometry height="50" width="190" x="65" y="375" as="geometry" />
+        </mxCell>
+        <mxCell id="track" parent="system" style="ellipse;whiteSpace=wrap;html=1;" value="Acompanhar Pedido" vertex="1">
+          <mxGeometry height="50" width="190" x="65" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="search" parent="system" style="ellipse;whiteSpace=wrap;html=1;" value="Buscar Receitas" vertex="1">
+          <mxGeometry height="50" width="190" x="65" y="525" as="geometry" />
+        </mxCell>
+        <mxCell id="login" parent="system" style="ellipse;whiteSpace=wrap;html=1;" value="Login" vertex="1">
+          <mxGeometry height="50" width="190" x="65" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="registerchef" parent="system" style="ellipse;whiteSpace=wrap;html=1;" value="Solicitar e Aprovar Cadastro de Chef" vertex="1">
+          <mxGeometry height="50" width="190" x="365" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="registerrecipe" parent="system" style="ellipse;whiteSpace=wrap;html=1;" value="Cadastrar Receita" vertex="1">
+          <mxGeometry height="50" width="190" x="365" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="senddocs" parent="system" style="ellipse;whiteSpace=wrap;html=1;" value="Enviar Documentos" vertex="1">
+          <mxGeometry height="50" width="190" x="655" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="ingredients" parent="system" style="ellipse;whiteSpace=wrap;html=1;" value="Gerenciar Ingredientes" vertex="1">
+          <mxGeometry height="50" width="210" x="655" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="payment" parent="system" style="ellipse;whiteSpace=wrap;html=1;" value="Processar Pagamento" vertex="1">
+          <mxGeometry height="50" width="210" x="365" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="inc1" edge="1" parent="system" source="order" style="dashed=1;endArrow=open;endFill=0;html=1;rounded=0;" target="payment" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc2" edge="1" parent="system" source="registerrecipe" style="dashed=1;endArrow=open;endFill=0;html=1;rounded=0;" target="ingredients" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc3" edge="1" parent="system" source="registerchef" style="dashed=1;endArrow=open;endFill=0;html=1;rounded=0;" target="senddocs" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc4" edge="1" parent="system" source="senddocs" style="dashed=1;endArrow=open;endFill=0;html=1;rounded=0;exitX=0.54;exitY=0.013;exitDx=0;exitDy=0;exitPerimeter=0;" target="validate" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="admin" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Administrador" vertex="1">
+          <mxGeometry height="110" width="80" x="70" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="user" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Usuário" vertex="1">
+          <mxGeometry height="110" width="80" x="70" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="chef" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Chef" vertex="1">
+          <mxGeometry height="110" width="80" x="70" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="a1" edge="1" parent="1" source="admin" style="endArrow=none;html=1;" target="validate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" edge="1" parent="1" source="admin" style="endArrow=none;html=1;" target="profile">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" edge="1" parent="1" source="user" style="endArrow=none;html=1;" target="profile">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a4" edge="1" parent="1" source="user" style="endArrow=none;html=1;" target="favorite">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a5" edge="1" parent="1" source="user" style="endArrow=none;html=1;" target="rate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a6" edge="1" parent="1" source="user" style="endArrow=none;html=1;" target="order">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a7" edge="1" parent="1" source="user" style="endArrow=none;html=1;" target="track">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a8" edge="1" parent="1" source="user" style="endArrow=none;html=1;" target="search">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a9" edge="1" parent="1" source="user" style="endArrow=none;html=1;" target="login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a10" edge="1" parent="1" source="admin" style="endArrow=none;html=1;" target="login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a11" edge="1" parent="1" source="chef" style="endArrow=none;html=1;" target="login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a12" edge="1" parent="1" source="chef" style="endArrow=none;html=1;" target="registerchef">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a13" edge="1" parent="1" source="chef" style="endArrow=none;html=1;" target="registerrecipe">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a14" edge="1" parent="1" source="chef" style="endArrow=none;html=1;" target="profile">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
