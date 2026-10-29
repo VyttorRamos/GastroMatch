@@ -4,10 +4,13 @@ import { useAuth } from "../services/AuthContext";
 export default function UserDashboardBanner({
   onOpenProfile,
   onOpenOrders,
+  onOpenPurchasedRecipes,
+  onOpenRecipeLocation,
   onOpenFavorites,
   onFilterFavorites,
   favoriteCount = 0,
-  ordersCount = 0
+  ordersCount = 0,
+  purchasedCount = 0
 }) {
   const { user } = useAuth();
 
@@ -17,7 +20,6 @@ export default function UserDashboardBanner({
   const rawName = user.chef?.displayName || user.name || "Gourmet";
   const firstName = rawName.replace(/^Chef\s+/i, "").trim().split(" ")[0] || "Gourmet";
   const prefs = user.profile?.preferences || {};
-  const dietaryTags = Array.isArray(prefs.dietary) ? prefs.dietary : [];
   const addressCity = user.profile?.city || prefs.address?.city;
   const addressState = user.profile?.state || prefs.address?.state;
 
@@ -59,6 +61,13 @@ export default function UserDashboardBanner({
               <button
                 type="button"
                 className="button button-small button-outline btn-edit-profile-hero"
+                onClick={onOpenOrders}
+              >
+                <Icon name="bag" size={14} /> Histórico de Pedidos ({ordersCount})
+              </button>
+              <button
+                type="button"
+                className="button button-small button-outline btn-edit-profile-hero"
                 onClick={onOpenProfile}
               >
                 <Icon name="fileText" size={14} /> Editar Meu Perfil
@@ -68,19 +77,35 @@ export default function UserDashboardBanner({
 
           {/* 3 KPI / Shortcut Cards */}
           <div className="user-kpi-grid">
-            {/* Card 1: Meus Pedidos */}
-            <div className="user-kpi-card" onClick={onOpenOrders}>
-              <div className="kpi-icon-wrap orange">
-                <Icon name="bag" size={22} />
+            {/* Card 1: Minhas Receitas Compradas */}
+            <div className="user-kpi-card" onClick={onOpenPurchasedRecipes}>
+              <div className="kpi-icon-wrap green">
+                <Icon name="unlock" size={22} />
               </div>
               <div className="kpi-content">
-                <span className="kpi-title">Meus Pedidos & Kits</span>
-                <span className="kpi-metric">{ordersCount} {ordersCount === 1 ? "pedido registrado" : "pedidos registrados"}</span>
-                <span className="kpi-cta">Acompanhar status de entrega →</span>
+                <span className="kpi-title">Minhas Receitas Compradas</span>
+                <span className="kpi-metric">
+                  {purchasedCount} {purchasedCount === 1 ? "receita desbloqueada" : "receitas desbloqueadas"}
+                </span>
+                <span className="kpi-cta">Ver modo de preparo e aulas →</span>
               </div>
             </div>
 
-            {/* Card 2: Favoritos */}
+            {/* Card 2: Localização das Receitas Compradas */}
+            <div className="user-kpi-card" onClick={onOpenRecipeLocation}>
+              <div className="kpi-icon-wrap orange">
+                <Icon name="mapPin" size={22} />
+              </div>
+              <div className="kpi-content">
+                <span className="kpi-title">Localização das Receitas</span>
+                <span className="kpi-metric">
+                  {purchasedCount > 0 ? "Rastreio & endereço do chef ativos" : "Compre uma receita para localizar"}
+                </span>
+                <span className="kpi-cta">Ver onde está a receita no mapa →</span>
+              </div>
+            </div>
+
+            {/* Card 3: Favoritos */}
             <div className="user-kpi-card" onClick={onOpenFavorites || onFilterFavorites}>
               <div className="kpi-icon-wrap red">
                 <Icon name="heart" size={22} />
@@ -88,27 +113,7 @@ export default function UserDashboardBanner({
               <div className="kpi-content">
                 <span className="kpi-title">Receitas Favoritas</span>
                 <span className="kpi-metric">{favoriteCount} {favoriteCount === 1 ? "prato salvo" : "pratos salvos"}</span>
-                <span className="kpi-cta">Filtrar receitas salvas →</span>
-              </div>
-            </div>
-
-            {/* Card 3: Preferências e Restrições */}
-            <div className="user-kpi-card" onClick={onOpenProfile}>
-              <div className="kpi-icon-wrap green">
-                <Icon name="check" size={22} />
-              </div>
-              <div className="kpi-content">
-                <span className="kpi-title">Preferências & Restrições</span>
-                <div className="kpi-tags-row">
-                  {dietaryTags.length > 0 ? (
-                    dietaryTags.slice(0, 3).map((tag) => (
-                      <span key={tag} className="kpi-diet-badge">{tag}</span>
-                    ))
-                  ) : (
-                    <span className="kpi-diet-none">Nenhuma restrição marcada</span>
-                  )}
-                </div>
-                <span className="kpi-cta">Personalizar dieta e endereço →</span>
+                <span className="kpi-cta">Ver lista de desejos →</span>
               </div>
             </div>
           </div>

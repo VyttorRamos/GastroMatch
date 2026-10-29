@@ -107,6 +107,63 @@ Se o token for omitido ou inválido, a API responderá com status `401 Unauthori
 
 ---
 
+### 2.4 Atualizar Perfil, Endereço & Preferências
+- **Método:** `PUT`
+- **Rota:** `/api/auth/profile`
+- **Acesso:** Protegido (requer Bearer Token)
+- **Corpo da Requisição (JSON):**
+  ```json
+  {
+    "name": "Chef Yasmin Lobo",
+    "avatarUrl": "data:image/jpeg;base64,...",
+    "phone": "(12) 99999-9999",
+    "city": "Taubaté",
+    "state": "SP",
+    "country": "Brasil",
+    "preferences": {
+      "dietary": ["Vegetariano", "Sem Glúten"],
+      "skillLevel": "Intermediário",
+      "address": {
+        "zipCode": "12000-000",
+        "street": "Rua Exemplo",
+        "number": "100",
+        "complement": "Apto 101",
+        "neighborhood": "Centro",
+        "city": "Taubaté",
+        "state": "SP"
+      }
+    },
+    "currentPassword": "senhaAtual123",
+    "newPassword": "novaSenha456"
+  }
+  ```
+  *(Os campos `currentPassword` e `newPassword` são opcionais, usados apenas para alteração de senha)*
+- **Respostas:**
+  - `200 OK`:
+    ```json
+    {
+      "message": "Perfil atualizado com sucesso.",
+      "user": {
+        "id": 1,
+        "name": "Chef Yasmin Lobo",
+        "email": "yasmin@gastromatch.com",
+        "role": "CHEF",
+        "avatarUrl": "data:image/jpeg;base64,...",
+        "profile": {
+          "phone": "(12) 99999-9999",
+          "city": "Taubaté",
+          "state": "SP",
+          "country": "Brasil",
+          "preferences": { ... }
+        }
+      }
+    }
+    ```
+  - `400 Bad Request`: `{ "message": "A nova senha deve ter no mínimo 6 dígitos." }`
+  - `401 Unauthorized`: `{ "message": "Senha atual incorreta." }`
+
+---
+
 ## 3. Endpoints de Receitas (`/api/recipes`)
 
 ### 3.1 Listar Receitas Publicadas

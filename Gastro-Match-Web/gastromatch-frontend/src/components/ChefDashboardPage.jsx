@@ -8,7 +8,7 @@ function formatPrice(val) {
   return Number(val).toFixed(2).replace(".", ",");
 }
 
-export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
+export default function ChefDashboardPage({ onBackToStore, onRecipeCreated, onOpenAdminDashboard }) {
   const { user, logout, login } = useAuth();
   const isChefOrAdmin = Boolean(user && (user.role === "CHEF" || user.role === "ADMIN" || Boolean(user.chef)));
 
@@ -30,10 +30,13 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
   // New Restaurant Onboarding Form State
   const [regForm, setRegForm] = useState({
     name: "",
+    email: "",
     cnpj: "",
     restaurant: "",
     city: "",
     docType: "Alvará Sanitário Vigente (Vigilância Municipal)",
+    fileUrl: "",
+    fileName: "",
     termsAccepted: false
   });
   const [regSubmitted, setRegSubmitted] = useState(false);
@@ -264,8 +267,80 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
     }
   }
 
-  function handleChefRegister(e) {
+  function handleDocFileChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setRegForm((prev) => ({
+        ...prev,
+        fileName: file.name,
+        fileUrl: typeof reader.result === "string" ? reader.result : file.name
+      }));
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function handleChefRegister(e) {
     e.preventDefault();
+    const docFileUrl =
+      regForm.fileUrl ||
+      `alvara_${(regForm.restaurant || "restaurante").toLowerCase().replace(/[^a-z0-9]/g, "_")}.pdf`;
+
+    const newEntry = {
+      id: Date.now(),
+      displayName: regForm.name,
+      restaurant: regForm.restaurant,
+      cnpj: regForm.cnpj,
+      description: `Localização: ${regForm.city || "Brasil"}`,
+      status: "PENDING",
+      createdAt: new Date().toISOString(),
+      user: {
+        name: regForm.name,
+        email:
+          regForm.email ||
+          `${regForm.name.toLowerCase().replace(/[^a-z0-9]/g, "")}@restaurante.com.br`,
+        profile: { city: regForm.city }
+      },
+      documents: [
+        {
+          id: Date.now() + 1,
+          type: regForm.docType,
+          fileUrl: docFileUrl,
+          fileName: regForm.fileName || docFileUrl,
+          createdAt: new Date().toISOString()
+        }
+      ],
+      _count: { recipes: 0 }
+    };
+
+    try {
+      const res = await api.submitChefApplication({
+        name: regForm.name,
+        email: newEntry.user.email,
+        restaurant: regForm.restaurant,
+        cnpj: regForm.cnpj,
+        city: regForm.city,
+        docType: regForm.docType,
+        fileUrl: docFileUrl
+      });
+      if (res?.chef) {
+        newEntry.id = res.chef.id;
+      }
+    } catch {
+      // Salva localmente mesmo se a API estiver offline
+    }
+
+    try {
+      const existing = JSON.parse(localStorage.getItem("gastromatch_chef_applications") || "[]");
+      localStorage.setItem(
+        "gastromatch_chef_applications",
+        JSON.stringify([newEntry, ...existing])
+      );
+    } catch {
+      // ignore
+    }
+
     setRegSubmitted(true);
   }
 
@@ -310,53 +385,6 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
                 Publique suas receitas autorais, ministre videoaulas didáticas e entregue
                 kits de ingredientes frescos e porcionados diretamente aos clientes.
               </p>
-            </div>
-
-            {/* Caixa de Demonstração Rápida (1-Clique para Avaliação Acadêmica) */}
-            <div className="chef-demo-access-box">
-              <div className="demo-access-title-row">
-                <div className="demo-icon-badge">
-                  <Icon name="chef" size={24} />
-                </div>
-                <div>
-                  <h3>Acesso Imediato para Demonstração (1-Clique)</h3>
-                  <p>Acesse o painel completo instantaneamente com um dos chefs já homologados no sistema:</p>
-                </div>
-              </div>
-
-              <div className="demo-chef-cards-grid">
-                <div className="demo-chef-select-card">
-                  <div className="demo-chef-meta">
-                    <strong>Chef Gabriel Rossi</strong>
-                    <span>Trattoria da Nonna • Massas & Culinária Italiana</span>
-                    <small>E-mail: gabriel@gastromatch.com</small>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={loginLoading}
-                    className="button button-orange"
-                    onClick={() => handleQuickLogin("gabriel@gastromatch.com", "chef123")}
-                  >
-                    {loginLoading ? "Conectando..." : "Entrar como Chef Gabriel →"}
-                  </button>
-                </div>
-
-                <div className="demo-chef-select-card">
-                  <div className="demo-chef-meta">
-                    <strong>Chef Yasmin Lobo</strong>
-                    <span>Pasticceria Gourmet • Sobremesas & Alta Confeitaria</span>
-                    <small>E-mail: yasmin@gastromatch.com</small>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={loginLoading}
-                    className="button button-orange"
-                    onClick={() => handleQuickLogin("yasmin@gastromatch.com", "chef123")}
-                  >
-                    {loginLoading ? "Conectando..." : "Entrar como Chef Yasmin →"}
-                  </button>
-                </div>
-              </div>
             </div>
 
             {/* Abas na Própria Tela: Login ou Credenciamento (SEM NENHUM MODAL) */}
@@ -480,9 +508,13 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
                     <Icon name="fileText" size={26} />
                     <div className="upload-texts">
                       <strong>Cópia Digital do Alvará Sanitário / CNPJ</strong>
-                      <p>Formatos aceitos: PDF, JPG ou PNG (tamanho máximo: 10MB)</p>
+                      <p>
+                        {regForm.fileName
+                          ? `Arquivo anexado: ${regForm.fileName}`
+                          : "Formatos aceitos: PDF, JPG ou PNG (tamanho máximo: 10MB)"}
+                      </p>
                     </div>
-                    <input type="file" accept=".pdf,.jpg,.png" />
+                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleDocFileChange} />
                   </div>
 
                   <label className="checkbox-confirm-row">
@@ -510,20 +542,24 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated }) {
                   <div className="reg-success-icon">
                     <Icon name="shieldCheck" size={44} />
                   </div>
-                  <h3>Credenciais Enviadas com Sucesso!</h3>
+                  <h3>Credenciais e Documentos Enviados com Sucesso!</h3>
                   <p>
-                    A solicitação do estabelecimento <strong>{regForm.restaurant || "seu restaurante"}</strong> foi registrada.
-                    Nossa equipe técnica e sanitária analisará os documentos em até 24 horas úteis.
+                    A solicitação do estabelecimento <strong>{regForm.restaurant || "seu restaurante"}</strong> e o documento{" "}
+                    <strong>{regForm.docType}</strong> foram encaminhados para o <strong>Painel do Administrador</strong>.
                   </p>
-                  <div className="reg-success-cta-box">
-                    <span>Enquanto aguarda a análise, você pode explorar as ferramentas agora:</span>
-                    <button
-                      type="button"
-                      className="button button-orange"
-                      onClick={() => handleQuickLogin("gabriel@gastromatch.com", "chef123")}
-                    >
-                      Entrar no Painel de Demonstração
-                    </button>
+                  <div className="reg-success-cta-box" style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
+                    <span>Você pode abrir o Painel do Administrador agora para aprovar este cadastro:</span>
+                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+                      {onOpenAdminDashboard && (
+                        <button
+                          type="button"
+                          className="button button-orange"
+                          onClick={onOpenAdminDashboard}
+                        >
+                          <Icon name="shieldCheck" size={16} /> Abrir Painel do Admin (Aprovar Documento)
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

@@ -2,7 +2,14 @@ import { useState, useEffect } from "react";
 import Icon from "./Icon";
 import { api } from "../services/api";
 
-export default function PaymentModal({ cartItems = [], totalAmount = 0, onClose, onPaymentSuccess }) {
+export default function PaymentModal({
+  cartItems = [],
+  totalAmount = 0,
+  onClose,
+  onPaymentSuccess,
+  onOpenPurchasedRecipes,
+  onOpenRecipeLocation
+}) {
   const [method, setMethod] = useState("PIX"); // PIX or CREDIT_CARD
   const [step, setStep] = useState("select"); // select, processing, pix_pay, card_form, success
   const [loading, setLoading] = useState(false);
@@ -34,7 +41,7 @@ export default function PaymentModal({ cartItems = [], totalAmount = 0, onClose,
       // Map cart items for backend
       const itemsPayload = cartItems.map((item) => ({
         recipeId: item.recipe?.id || item.id,
-        price: item.recipe?.price || item.price || 29.9,
+        price: item.totalPrice || item.recipe?.price || item.price || 29.9,
         quantity: 1
       }));
 
@@ -48,7 +55,7 @@ export default function PaymentModal({ cartItems = [], totalAmount = 0, onClose,
         setStep("pix_pay");
       } else {
         setStep("success");
-        if (onPaymentSuccess) onPaymentSuccess(response.order);
+        if (onPaymentSuccess) onPaymentSuccess({ ...response.order, status: "PAID", cartItems });
       }
     } catch (error) {
       console.warn("Erro ao comunicar com backend PostgreSQL:", error.message);
@@ -78,7 +85,7 @@ export default function PaymentModal({ cartItems = [], totalAmount = 0, onClose,
         setStep("pix_pay");
       } else {
         setStep("success");
-        if (onPaymentSuccess) onPaymentSuccess(mockOrder);
+        if (onPaymentSuccess) onPaymentSuccess({ ...mockOrder, status: "PAID", cartItems });
       }
     } finally {
       setLoading(false);
@@ -88,11 +95,13 @@ export default function PaymentModal({ cartItems = [], totalAmount = 0, onClose,
   const handleConfirmPixPayment = async () => {
     setLoading(true);
     try {
+      let confirmedOrder = orderData;
       if (orderData?.id) {
-        await api.confirmPayment(orderData.id).catch(() => {});
+        const res = await api.confirmPayment(orderData.id).catch(() => null);
+        if (res?.order) confirmedOrder = res.order;
       }
       setStep("success");
-      if (onPaymentSuccess) onPaymentSuccess(orderData);
+      if (onPaymentSuccess) onPaymentSuccess({ ...confirmedOrder, status: "PAID", cartItems });
     } catch (err) {
       console.error(err);
       setStep("success");
@@ -303,9 +312,37 @@ export default function PaymentModal({ cartItems = [], totalAmount = 0, onClose,
               </div>
             </div>
 
-            <button className="button button-orange button-full" onClick={onClose}>
-              Concluir & Voltar às Receitas
-            </button>
+            <div className="payment-success-actions-stack">
+              {onOpenPurchasedRecipes && (
+                <button
+                  type="button"
+                  className="button button-orange button-full"
+                  onClick={() => {
+                    onClose();
+                    onOpenPurchasedRecipes();
+                  }}
+                >
+                  <Icon name="unlock" size={16} /> Ver Minhas Receitas Compradas
+                </button>
+              )}
+
+              {onOpenRecipeLocation && (
+                <button
+                  type="button"
+                  className="button button-outline button-full"
+                  onClick={() => {
+                    onClose();
+                    onOpenRecipeLocation();
+                  }}
+                >
+                  <Icon name="mapPin" size={16} /> Ver Localização da Receita Comprada
+                </button>
+              )}
+
+              <button className="button button-small button-outline button-full" onClick={onClose}>
+                Concluir & Voltar ao Catálogo
+              </button>
+            </div>
           </div>
         )}
       </div>

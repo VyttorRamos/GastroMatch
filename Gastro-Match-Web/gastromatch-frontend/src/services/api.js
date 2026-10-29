@@ -98,5 +98,19 @@ export const api = {
   deleteRecipe: (id) =>
     request(`/recipes/${id}`, {
       method: "DELETE"
+    }),
+
+  submitChefApplication: (data) =>
+    request("/chefs/apply", {
+      method: "POST",
+      body: JSON.stringify(data)
+    }),
+
+  adminChefApplications: () => request("/chefs/admin/applications"),
+
+  adminUpdateChefStatus: (chefId, status) =>
+    request(`/chefs/admin/${chefId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status })
     })
 };

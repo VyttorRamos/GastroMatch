@@ -5,24 +5,42 @@ function formatPrice(value) {
   return Number(value).toFixed(2).replace(".", ",");
 }
 
-export default function RecipeCard({ recipe, onSelect, isFavorite = false, onToggleFavorite }) {
-  const rating = recipe.rating ?? "—";
-  const reviews = recipe.reviews ?? recipe._count?.reviews ?? 0;
-  const time = recipe.time ?? `${recipe.prepTime ?? 0} min`;
+export function getRecipeDisplayImage(recipe) {
+  if (recipe?.imageUrl) return recipe.imageUrl;
+  if (recipe?.image) return recipe.image;
+  const text = `${recipe?.title || ""} ${recipe?.category?.name || recipe?.category || ""}`.toLowerCase();
+  if (text.includes("pappardelle") || text.includes("ragu") || text.includes("cordeiro") || text.includes("massa")) {
+    return "https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=900&q=80";
+  }
+  if (text.includes("sushi") || text.includes("japonesa") || text.includes("omakase")) {
+    return "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=900&q=80";
+  }
+  if (text.includes("doce") || text.includes("sobremesa") || text.includes("chocolate") || text.includes("gateau")) {
+    return "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=900&q=80";
+  }
+  return "https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&w=900&q=80";
+}
+
+export default function RecipeCard({
+  recipe,
+  onSelect,
+  isFavorite = false,
+  onToggleFavorite,
+  isPurchased = false
+}) {
+  const rating = recipe.rating ?? "4.9";
+  const reviews = recipe.reviews ?? recipe._count?.reviews ?? 12;
+  const time = recipe.time ?? `${recipe.prepTime ?? 40} min`;
   const difficultyMap = { EASY: "Fácil", MEDIUM: "Médio", HARD: "Difícil" };
-  const difficulty = difficultyMap[recipe.difficulty] || recipe.difficulty || "—";
+  const difficulty = difficultyMap[recipe.difficulty] || recipe.difficulty || "Médio";
   const chef = recipe.chef?.displayName || recipe.chef?.restaurant || recipe.chef || "GastroMatch";
-  const image = recipe.imageUrl || recipe.image;
+  const image = getRecipeDisplayImage(recipe);
   const hasKit = Boolean(recipe.hasKit);
 
   return (
-    <article className="recipe-card" onClick={() => onSelect && onSelect(recipe)}>
+    <article className={`recipe-card ${isPurchased ? "recipe-card-purchased" : ""}`} onClick={() => onSelect && onSelect(recipe)}>
       <div className="recipe-image">
-        {image ? (
-          <img src={image} alt={recipe.title} loading="lazy" />
-        ) : (
-          <div className="recipe-image-placeholder">GastroMatch</div>
-        )}
+        <img src={image} alt={recipe.title} loading="lazy" />
         <span className="price">R$ {formatPrice(recipe.price)}</span>
 
         {hasKit && (
@@ -46,7 +64,19 @@ export default function RecipeCard({ recipe, onSelect, isFavorite = false, onTog
       </div>
 
       <div className="recipe-body">
-        <span className="recipe-chef">{chef}</span>
+        <div className="recipe-body-top-row">
+          <span className="recipe-chef">{chef}</span>
+          {isPurchased ? (
+            <span className="card-access-pill unlocked">
+              <Icon name="check" size={11} /> Liberada
+            </span>
+          ) : (
+            <span className="card-access-pill locked">
+              <Icon name="lock" size={11} /> Exclusiva
+            </span>
+          )}
+        </div>
+
         <h3>{recipe.title}</h3>
 
         <div className="recipe-meta">
@@ -56,7 +86,11 @@ export default function RecipeCard({ recipe, onSelect, isFavorite = false, onTog
         </div>
 
         <button className="recipe-button" onClick={(e) => { e.stopPropagation(); onSelect && onSelect(recipe); }}>
-          Ver receita <Icon name="arrow" size={15} />
+          {isPurchased ? (
+            <>Acessar receita <Icon name="unlock" size={14} /></>
+          ) : (
+            <>Comprar & acessar <Icon name="arrow" size={15} /></>
+          )}
         </button>
       </div>
     </article>

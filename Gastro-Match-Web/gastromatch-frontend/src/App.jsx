@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Icon from "./components/Icon";
 import Header from "./components/Header";
-import RecipeCard from "./components/RecipeCard";
+import RecipeCard, { getRecipeDisplayImage } from "./components/RecipeCard";
 import Stats from "./components/Stats";
 import Footer from "./components/Footer";
 import AuthModal from "./components/AuthModal";
@@ -12,7 +12,10 @@ import PaymentModal from "./components/PaymentModal";
 import FeaturedChefs from "./components/FeaturedChefs";
 import Testimonials from "./components/Testimonials";
 import ChefDashboardPage from "./components/ChefDashboardPage";
+import AdminDashboardPage from "./components/AdminDashboardPage";
 import CustomerOrdersModal from "./components/CustomerOrdersModal";
+import PurchasedRecipesModal from "./components/PurchasedRecipesModal";
+import RecipeLocationModal, { resolveChefLocation } from "./components/RecipeLocationModal";
 import UserProfileModal from "./components/UserProfileModal";
 import UserDashboardBanner from "./components/UserDashboardBanner";
 import FavoritesModal from "./components/FavoritesModal";
@@ -70,7 +73,7 @@ const fallbackRecipes = [
   }
 ];
 
-const categories = ["Todas", "Massas", "Brasileira", "Japonesa", "Mexicana", "Sobremesas", "Favoritos ❤️"];
+const categories = ["Todas", "Massas", "Brasileira", "Japonesa", "Mexicana", "Sobremesas", "Minhas Compras 🔓", "Favoritos ❤️"];
 
 function GastroMatchApp() {
   const { user } = useAuth();
@@ -83,6 +86,9 @@ function GastroMatchApp() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [ordersModalOpen, setOrdersModalOpen] = useState(false);
+  const [purchasedModalOpen, setPurchasedModalOpen] = useState(false);
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
+  const [locationTarget, setLocationTarget] = useState(null);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [favoritesModalOpen, setFavoritesModalOpen] = useState(false);
   const [currentView, setCurrentView] = useState("store"); // "store" | "chef"
@@ -94,7 +100,7 @@ function GastroMatchApp() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [paymentTotal, setPaymentTotal] = useState(0);
   const [toastMessage, setToastMessage] = useState("");
-  const [customerOrdersCount, setCustomerOrdersCount] = useState(0);
+  const [userOrders, setUserOrders] = useState([]);
 
   const [favoriteIds, setFavoriteIds] = useState(() => {
     try {
@@ -120,7 +126,18 @@ function GastroMatchApp() {
     api.recipes()
       .then((data) => {
         if (Array.isArray(data) && data.length) {
-          setRecipes(data);
+          const seenTitles = new Set();
+          const deduplicated = [];
+          for (const rec of [...data, ...fallbackRecipes]) {
+            const normTitle = (rec.title || "").trim().toLowerCase();
+            if (normTitle && seenTitles.has(normTitle)) continue;
+            if (normTitle) seenTitles.add(normTitle);
+            deduplicated.push({
+              ...rec,
+              imageUrl: rec.imageUrl || getRecipeDisplayImage(rec)
+            });
+          }
+          setRecipes(deduplicated);
         } else {
           setRecipes(fallbackRecipes);
         }
@@ -137,34 +154,173 @@ function GastroMatchApp() {
     fetchRecipes();
   }, []);
 
+  const getStorageOrdersKey = (u) =>
+    u ? `gastromatch_orders_${u.id || u.email}` : null;
+
   useEffect(() => {
-    if (user?.token) {
-      api.myOrders(user.token)
-        .then((orders) => {
-          if (Array.isArray(orders)) {
-            setCustomerOrdersCount(orders.length);
-          }
-        })
-        .catch(() => {});
-    } else {
-      setCustomerOrdersCount(0);
+    if (!user) {
+      setUserOrders([]);
+      return;
     }
-  }, [user?.token]);
+
+    const storageKey = getStorageOrdersKey(user);
+    let localOrders = [];
+    try {
+      localOrders = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    } catch {
+      localOrders = [];
+    }
+
+    api.orders()
+      .then((apiList) => {
+        if (Array.isArray(apiList)) {
+          const mergedMap = new Map();
+          [...localOrders, ...apiList].forEach((ord) => {
+            if (ord && ord.id) {
+              const prev = mergedMap.get(ord.id);
+              mergedMap.set(ord.id, prev ? { ...ord, ...prev, status: ord.status === "PAID" ? "PAID" : prev.status || ord.status } : ord);
+            }
+          });
+          const merged = Array.from(mergedMap.values()).sort(
+            (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+          );
+          setUserOrders(merged);
+          localStorage.setItem(storageKey, JSON.stringify(merged));
+        } else {
+          setUserOrders(localOrders);
+        }
+      })
+      .catch(() => {
+        setUserOrders(localOrders);
+      });
+  }, [user]);
+
+  const purchasedRecipes = useMemo(() => {
+    if (!user) return [];
+    const paidOrders = userOrders.filter(
+      (ord) =>
+        ord.status === "PAID" ||
+        ord.status === "PROCESSING" ||
+        ord.status === "SHIPPED" ||
+        ord.status === "DELIVERED"
+    );
+
+    const seen = new Set();
+    const list = [];
+
+    paidOrders.forEach((ord) => {
+      (ord.items || []).forEach((it) => {
+        const rawRec = it.recipe || it;
+        const recId = Number(it.recipeId || rawRec?.id);
+        const catalogMatch = recipes.find(
+          (r) =>
+            (recId && Number(r.id) === recId) ||
+            (rawRec?.title && r.title === rawRec.title)
+        );
+        const fullRecipe = catalogMatch ? { ...rawRec, ...catalogMatch } : rawRec;
+        if (!fullRecipe || (!fullRecipe.id && !fullRecipe.title)) return;
+
+        const key = fullRecipe.id ? `id:${fullRecipe.id}` : `title:${fullRecipe.title}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+
+        const loc = resolveChefLocation(fullRecipe);
+        const unitPrice = Number(it.unitPrice ?? it.totalPrice ?? it.price ?? fullRecipe.price ?? 29.9);
+        const basePrice = Number(fullRecipe.price || 29.9);
+
+        list.push({
+          recipe: fullRecipe,
+          orderId: ord.id,
+          purchasedAt: ord.createdAt,
+          paidAmount: unitPrice,
+          includeKit: Boolean(it.includeKit || unitPrice > basePrice + 1),
+          originAddress: `${loc.restaurant} — ${loc.street}, ${loc.city}`
+        });
+      });
+    });
+
+    return list;
+  }, [user, userOrders, recipes]);
+
+  const isRecipePurchased = (recipe) => {
+    if (!user || !recipe) return false;
+    if (user.id && recipe.authorId && Number(user.id) === Number(recipe.authorId)) {
+      return true;
+    }
+    return purchasedRecipes.some((entry) => {
+      if (recipe.id && entry.recipe?.id) {
+        return Number(entry.recipe.id) === Number(recipe.id);
+      }
+      return Boolean(recipe.title && entry.recipe?.title === recipe.title);
+    });
+  };
 
   const handleAddToCart = (item) => {
+    if (!user) {
+      setAuthOpen(true);
+      setToastMessage("Faça login na sua conta para comprar receitas!");
+      setTimeout(() => setToastMessage(""), 3500);
+      return;
+    }
     setCartItems((prev) => [...prev, item]);
     setToastMessage(`"${item.recipe?.title || item.title}" adicionado à sacola!`);
     setTimeout(() => setToastMessage(""), 3500);
+  };
+
+  const handleBuyNow = (item) => {
+    if (!user) {
+      setAuthOpen(true);
+      setToastMessage("Faça login na sua conta para comprar e liberar a receita!");
+      setTimeout(() => setToastMessage(""), 3500);
+      return;
+    }
+    const price = item.totalPrice || Number(item.recipe?.price || item.price || 29.9);
+    setCartItems([item]);
+    setPaymentTotal(price);
+    setPaymentModalOpen(true);
   };
 
   const handleRemoveCartItem = (index) => {
     setCartItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handlePaymentCompleted = () => {
+  const recordPaidOrder = (completedOrder) => {
+    if (!user) return;
+    const normalizedItems =
+      completedOrder?.cartItems?.length > 0
+        ? completedOrder.cartItems.map((ci) => ({
+            recipeId: ci.recipe?.id || ci.id,
+            recipe: ci.recipe || ci,
+            quantity: 1,
+            unitPrice: ci.totalPrice || Number(ci.recipe?.price || ci.price || 29.9),
+            includeKit: Boolean(ci.includeKit)
+          }))
+        : completedOrder?.items || [];
+
+    const newOrder = {
+      id: completedOrder?.id || Math.floor(1000 + Math.random() * 9000),
+      status: "PAID",
+      total: completedOrder?.total || paymentTotal,
+      createdAt: completedOrder?.createdAt || new Date().toISOString(),
+      items: normalizedItems
+    };
+
+    setUserOrders((prev) => {
+      const filtered = prev.filter((o) => o.id !== newOrder.id);
+      const updated = [newOrder, ...filtered];
+      const storageKey = getStorageOrdersKey(user);
+      if (storageKey) {
+        localStorage.setItem(storageKey, JSON.stringify(updated));
+      }
+      return updated;
+    });
+  };
+
+  const handlePaymentCompleted = (completedOrder) => {
+    recordPaidOrder(completedOrder);
     setCartItems([]);
-    setToastMessage("Pagamento confirmado com sucesso!");
-    setTimeout(() => setToastMessage(""), 4000);
+    setToastMessage("Pagamento confirmado! Receita liberada em Minhas Receitas Compradas.");
+    setTimeout(() => setToastMessage(""), 4500);
   };
 
   const filteredRecipes = useMemo(() => {
@@ -183,10 +339,23 @@ function GastroMatchApp() {
     // Category filter
     if (selectedCategory === "Favoritos ❤️") {
       result = result.filter((recipe) => favoriteIds.includes(recipe.id));
-    } else if (selectedCategory !== "Todas") {
+    } else if (selectedCategory === "Minhas Compras 🔓") {
       result = result.filter((recipe) =>
-        recipe.category === selectedCategory || recipe.category?.name === selectedCategory
+        purchasedRecipes.some(
+          (entry) =>
+            (recipe.id && Number(entry.recipe?.id) === Number(recipe.id)) ||
+            (recipe.title && entry.recipe?.title === recipe.title)
+        )
       );
+    } else if (selectedCategory !== "Todas") {
+      result = result.filter((recipe) => {
+        const catName = (recipe.category?.name || recipe.category || "").toLowerCase();
+        const target = selectedCategory.toLowerCase();
+        if (target === "sobremesas") {
+          return catName === "sobremesas" || catName === "doce" || catName === "doces";
+        }
+        return catName === target;
+      });
     }
 
     // Dietary filter
@@ -222,17 +391,26 @@ function GastroMatchApp() {
     }
 
     return result;
-  }, [search, selectedCategory, selectedDifficulty, selectedDietary, sortBy, recipes, favoriteIds]);
+  }, [search, selectedCategory, selectedDifficulty, selectedDietary, sortBy, recipes, favoriteIds, purchasedRecipes]);
 
   const scrollToRecipes = () => {
     document.getElementById("receitas")?.scrollIntoView({ behavior: "smooth" });
   };
+
+  if (currentView === "admin") {
+    return (
+      <AdminDashboardPage
+        onBackToStore={() => setCurrentView("store")}
+      />
+    );
+  }
 
   if (currentView === "chef") {
     return (
       <ChefDashboardPage
         onBackToStore={() => setCurrentView("store")}
         onRecipeCreated={fetchRecipes}
+        onOpenAdminDashboard={() => setCurrentView("admin")}
       />
     );
   }
@@ -248,13 +426,21 @@ function GastroMatchApp() {
         cartCount={cartItems.length}
         onOpenCart={() => setCartOpen(true)}
         onOpenChefDashboard={() => setCurrentView("chef")}
+        onOpenAdminDashboard={() => setCurrentView("admin")}
         onOpenOrders={() => setOrdersModalOpen(true)}
+        onOpenPurchasedRecipes={() => setPurchasedModalOpen(true)}
+        onOpenRecipeLocation={() => {
+          setLocationTarget(null);
+          setLocationModalOpen(true);
+        }}
         onOpenProfile={() => setProfileModalOpen(true)}
         onOpenFavorites={() => setFavoritesModalOpen(true)}
         onFilterFavorites={() => {
+          setSelectedRecipe(null);
           setSelectedCategory("Favoritos ❤️");
-          scrollToRecipes();
+          setTimeout(scrollToRecipes, 50);
         }}
+        onGoHome={() => setSelectedRecipe(null)}
       />
 
       {toastMessage && (
@@ -265,6 +451,29 @@ function GastroMatchApp() {
         </div>
       )}
 
+      {selectedRecipe ? (
+        <main className="recipe-fullpage-main">
+          <RecipeModal
+            recipe={selectedRecipe}
+            isPurchased={isRecipePurchased(selectedRecipe)}
+            isFavorite={favoriteIds.includes(selectedRecipe.id)}
+            onToggleFavorite={handleToggleFavorite}
+            onClose={() => setSelectedRecipe(null)}
+            onAddToCart={handleAddToCart}
+            onBuyNow={handleBuyNow}
+            onRequireAuth={() => {
+              setAuthOpen(true);
+              setToastMessage("Entre na sua conta para comprar e desbloquear a receita!");
+              setTimeout(() => setToastMessage(""), 3500);
+            }}
+            onOpenLocation={(entry) => {
+              setLocationTarget(entry);
+              setLocationModalOpen(true);
+            }}
+            onOpenPurchasedRecipes={() => setPurchasedModalOpen(true)}
+          />
+        </main>
+      ) : (
       <main>
         <section className="hero-section">
           <div className="container">
@@ -299,13 +508,19 @@ function GastroMatchApp() {
           <UserDashboardBanner
             onOpenProfile={() => setProfileModalOpen(true)}
             onOpenOrders={() => setOrdersModalOpen(true)}
+            onOpenPurchasedRecipes={() => setPurchasedModalOpen(true)}
+            onOpenRecipeLocation={() => {
+              setLocationTarget(null);
+              setLocationModalOpen(true);
+            }}
             onOpenFavorites={() => setFavoritesModalOpen(true)}
             onFilterFavorites={() => {
               setSelectedCategory("Favoritos ❤️");
               scrollToRecipes();
             }}
             favoriteCount={favoriteIds.length}
-            ordersCount={customerOrdersCount}
+            ordersCount={userOrders.length}
+            purchasedCount={purchasedRecipes.length}
           />
         )}
 
@@ -387,16 +602,41 @@ function GastroMatchApp() {
                     onSelect={(rec) => setSelectedRecipe(rec)}
                     isFavorite={favoriteIds.includes(recipe.id)}
                     onToggleFavorite={handleToggleFavorite}
+                    isPurchased={isRecipePurchased(recipe)}
                   />
                 ))}
               </div>
             ) : (
               <div className="empty-state">
-                <Icon name="search" size={32} />
-                <h3>Nenhuma receita encontrada</h3>
-                <p>Tente ajustar os filtros ou a busca.</p>
+                <div className="empty-state-icon-badge">
+                  <Icon
+                    name={
+                      selectedCategory === "Minhas Compras 🔓"
+                        ? "lock"
+                        : selectedCategory === "Favoritos ❤️"
+                        ? "heart"
+                        : "search"
+                    }
+                    size={28}
+                  />
+                </div>
+                <h3>
+                  {selectedCategory === "Minhas Compras 🔓"
+                    ? "Você ainda não comprou nenhuma receita"
+                    : selectedCategory === "Favoritos ❤️"
+                    ? "Nenhuma receita salva nos favoritos"
+                    : "Nenhuma receita encontrada"}
+                </h3>
+                <p>
+                  {selectedCategory === "Minhas Compras 🔓"
+                    ? "Escolha um prato no catálogo e conclua o pagamento para desbloquear o passo a passo completo, videoaula e localização."
+                    : selectedCategory === "Favoritos ❤️"
+                    ? "Clique no ícone de coração nos cards de receitas para salvá-las na sua lista pessoal."
+                    : "Não encontramos pratos com essa combinação de filtros. Limpe os filtros para ver todo o catálogo."}
+                </p>
                 <button
-                  className="button button-small button-outline"
+                  type="button"
+                  className="button button-orange empty-state-btn"
                   onClick={() => {
                     setSearch("");
                     setSelectedCategory("Todas");
@@ -404,7 +644,10 @@ function GastroMatchApp() {
                     setSelectedDietary("Todas");
                   }}
                 >
-                  Limpar Filtros
+                  <Icon name="utensils" size={16} />{" "}
+                  {selectedCategory === "Minhas Compras 🔓" || selectedCategory === "Favoritos ❤️"
+                    ? "Explorar Todas as Receitas"
+                    : "Limpar Filtros"}
                 </button>
               </div>
             )}
@@ -482,16 +725,58 @@ function GastroMatchApp() {
           </div>
         </section>
       </main>
+      )}
 
       <Footer />
 
-      {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
+      {authOpen && (
+        <AuthModal
+          onClose={() => setAuthOpen(false)}
+          onLoginSuccess={(loggedUser) => {
+            if (loggedUser?.role === "ADMIN") {
+              setCurrentView("admin");
+            }
+          }}
+        />
+      )}
       {profileModalOpen && (
         <UserProfileModal onClose={() => setProfileModalOpen(false)} />
       )}
       {ordersModalOpen && (
         <CustomerOrdersModal
+          orders={userOrders}
           onClose={() => setOrdersModalOpen(false)}
+          onOpenRecipe={(rec) => setSelectedRecipe(rec)}
+          onOpenLocation={(entry) => {
+            setLocationTarget(entry);
+            setLocationModalOpen(true);
+          }}
+          onOrderPaid={(updatedOrd) => {
+            setUserOrders((prev) =>
+              prev.map((o) => (o.id === updatedOrd.id ? { ...o, ...updatedOrd, status: "PAID" } : o))
+            );
+          }}
+        />
+      )}
+      {purchasedModalOpen && (
+        <PurchasedRecipesModal
+          purchasedRecipes={purchasedRecipes}
+          onClose={() => setPurchasedModalOpen(false)}
+          onSelectRecipe={(rec) => setSelectedRecipe(rec)}
+          onOpenLocation={(entry) => {
+            setLocationTarget(entry);
+            setLocationModalOpen(true);
+          }}
+        />
+      )}
+      {locationModalOpen && (
+        <RecipeLocationModal
+          purchasedRecipes={purchasedRecipes}
+          initialSelection={locationTarget}
+          onClose={() => {
+            setLocationModalOpen(false);
+            setLocationTarget(null);
+          }}
           onOpenRecipe={(rec) => setSelectedRecipe(rec)}
         />
       )}
@@ -509,14 +794,10 @@ function GastroMatchApp() {
           chef={selectedChef}
           recipes={recipes}
           onClose={() => setSelectedChef(null)}
-          onSelectRecipe={(rec) => setSelectedRecipe(rec)}
-        />
-      )}
-      {selectedRecipe && (
-        <RecipeModal
-          recipe={selectedRecipe}
-          onClose={() => setSelectedRecipe(null)}
-          onAddToCart={handleAddToCart}
+          onSelectRecipe={(rec) => {
+            setSelectedChef(null);
+            setSelectedRecipe(rec);
+          }}
         />
       )}
       <CartDrawer
@@ -526,6 +807,13 @@ function GastroMatchApp() {
         onRemoveItem={handleRemoveCartItem}
         onClearCart={() => setCartItems([])}
         onOpenPaymentModal={(total) => {
+          if (!user) {
+            setCartOpen(false);
+            setAuthOpen(true);
+            setToastMessage("Faça login para finalizar a compra da receita!");
+            setTimeout(() => setToastMessage(""), 3500);
+            return;
+          }
           setPaymentTotal(total);
           setPaymentModalOpen(true);
         }}
@@ -536,6 +824,11 @@ function GastroMatchApp() {
           totalAmount={paymentTotal}
           onClose={() => setPaymentModalOpen(false)}
           onPaymentSuccess={handlePaymentCompleted}
+          onOpenPurchasedRecipes={() => setPurchasedModalOpen(true)}
+          onOpenRecipeLocation={() => {
+            setLocationTarget(null);
+            setLocationModalOpen(true);
+          }}
         />
       )}
     </div>

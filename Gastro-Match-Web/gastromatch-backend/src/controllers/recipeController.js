@@ -25,7 +25,17 @@ async function list(req, res) {
       },
       orderBy: { createdAt: "desc" }
     });
-    res.json(recipes);
+
+    const seenTitles = new Set();
+    const uniqueRecipes = recipes.filter((r) => {
+      const key = (r.title || "").trim().toLowerCase();
+      if (!key) return true;
+      if (seenTitles.has(key)) return false;
+      seenTitles.add(key);
+      return true;
+    });
+
+    res.json(uniqueRecipes);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Erro ao listar receitas." });

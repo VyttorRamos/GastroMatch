@@ -1,4 +1,19 @@
+const jwt = require("jsonwebtoken");
 const prisma = require("../config/prisma");
+
+const orderRecipeInclude = {
+  items: {
+    include: {
+      recipe: {
+        include: {
+          chef: true,
+          category: true,
+          ingredients: { include: { ingredient: true } }
+        }
+      }
+    }
+  }
+};
 
 // Helper to generate a realistic EMV BR Code string for PIX Copy & Paste
 function generatePixCode(orderId, total) {
@@ -21,9 +36,16 @@ async function create(req, res) {
 
     // Determine user (authenticated or fallback demo user)
     let userId = req.user?.id;
+    if (!userId && req.headers.authorization?.startsWith("Bearer ")) {
+      try {
+        const decoded = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWT_SECRET);
+        userId = decoded?.id;
+      } catch {
+        // fallback if token invalid
+      }
+    }
     if (!userId) {
-      const demoUser = await prisma.user.findFirst();
-      userId = demoUser?.id || 1;
+      return res.status(401).json({ message: "É necessário estar logado para realizar a compra." });
     }
 
     let total = 0;
@@ -63,9 +85,7 @@ async function create(req, res) {
         status: initialStatus,
         items: { create: orderItems }
       },
-      include: {
-        items: { include: { recipe: true } }
-      }
+      include: orderRecipeInclude
     });
 
     // Generate Payment Credentials
@@ -112,7 +132,7 @@ async function confirmPayment(req, res) {
     const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: { status: "PAID" },
-      include: { items: { include: { recipe: true } } }
+      include: orderRecipeInclude
     });
 
     res.json({
@@ -130,7 +150,7 @@ async function getById(req, res) {
     const orderId = Number(req.params.id);
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      include: { items: { include: { recipe: true } } }
+      include: orderRecipeInclude
     });
 
     if (!order) {
@@ -148,7 +168,7 @@ async function mine(req, res) {
   try {
     res.json(await prisma.order.findMany({
       where: { userId: req.user.id },
-      include: { items: { include: { recipe: true } } },
+      include: orderRecipeInclude,
       orderBy: { createdAt: "desc" }
     }));
   } catch (error) {
