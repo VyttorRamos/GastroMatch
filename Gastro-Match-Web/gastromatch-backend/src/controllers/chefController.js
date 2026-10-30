@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const prisma = require("../config/prisma");
+const { isValidEmail, isValidCnpj } = require("../utils/validators");
 
 async function create(req, res) {
   try {
@@ -53,6 +54,12 @@ async function apply(req, res) {
     if (!name || !restaurant || !cnpj) {
       return res.status(400).json({ message: "Nome, restaurante e CNPJ são obrigatórios." });
     }
+    if (!isValidCnpj(cnpj)) {
+      return res.status(400).json({ message: "O CNPJ informado é inválido. Verifique os 14 dígitos." });
+    }
+    if (email && !isValidEmail(email)) {
+      return res.status(400).json({ message: "O endereço de e-mail informado é inválido." });
+    }
 
     const normalizedEmail = (
       email || `${name.toLowerCase().replace(/[^a-z0-9]/g, "")}.${Date.now()}@gastromatch.com`
@@ -80,6 +87,15 @@ async function apply(req, res) {
               state: "SC"
             }
           }
+        }
+      });
+    } else if (password) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          name: name.trim(),
+          passwordHash,
+          role: "CHEF"
         }
       });
     }
@@ -133,15 +149,60 @@ async function apply(req, res) {
 
 async function list(req, res) {
   try {
-    res.json(
-      await prisma.chef.findMany({
-        where: { status: "APPROVED" },
-        include: {
-          user: { select: { id: true, name: true, avatarUrl: true, email: true } },
-          documents: true
+    const chefs = await prisma.chef.findMany({
+      where: { status: "APPROVED" },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            avatarUrl: true,
+            email: true,
+            profile: true
+          }
+        },
+        documents: {
+          orderBy: { createdAt: "desc" }
+        },
+        _count: {
+          select: { recipes: true }
+        },
+        recipes: {
+          where: { isPublished: true },
+          select: {
+            id: true,
+            title: true,
+            reviews: {
+              select: { rating: true }
+            }
+          }
         }
-      })
-    );
+      },
+      orderBy: { id: "asc" }
+    });
+
+    const enriched = chefs.map((chef) => {
+      const allRatings = (chef.recipes || []).flatMap((r) =>
+        (r.reviews || []).map((rev) => Number(rev.rating))
+      );
+      const avgRating =
+        allRatings.length > 0
+          ? Number(
+              (
+                allRatings.reduce((acc, cur) => acc + cur, 0) / allRatings.length
+              ).toFixed(1)
+            )
+          : null;
+
+      return {
+        ...chef,
+        recipesCount: chef._count?.recipes ?? (chef.recipes ? chef.recipes.length : 0),
+        rating: avgRating,
+        reviewsCount: allRatings.length
+      };
+    });
+
+    res.json(enriched);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Erro ao listar chefs." });
@@ -173,7 +234,19 @@ async function listAllForAdmin(req, res) {
       orderBy: { updatedAt: "desc" }
     });
 
-    res.json(chefs);
+    const enriched = chefs.map((c) => {
+      const prefs =
+        c.user?.profile?.preferences && typeof c.user.profile.preferences === "object"
+          ? c.user.profile.preferences
+          : {};
+      return {
+        ...c,
+        adminComment: prefs.adminComment || "",
+        hasPendencia: Boolean(prefs.hasPendencia)
+      };
+    });
+
+    res.json(enriched);
   } catch (error) {
     console.error("Erro ao listar solicitações de chefs:", error);
     res.status(500).json({ message: "Erro ao buscar solicitações de chefs." });
@@ -183,10 +256,39 @@ async function listAllForAdmin(req, res) {
 async function updateStatus(req, res) {
   try {
     const id = Number(req.params.id);
-    const { status } = req.body;
+    const { status, adminComment = "" } = req.body;
 
     if (!["PENDING", "APPROVED", "REJECTED"].includes(status)) {
       return res.status(400).json({ message: "Status inválido. Use PENDING, APPROVED ou REJECTED." });
+    }
+
+    const existingChef = await prisma.chef.findUnique({
+      where: { id },
+      include: { user: { include: { profile: true } } }
+    });
+
+    if (existingChef?.userId) {
+      const prevPrefs =
+        existingChef.user?.profile?.preferences &&
+        typeof existingChef.user.profile.preferences === "object"
+          ? existingChef.user.profile.preferences
+          : {};
+      const nextPrefs = {
+        ...prevPrefs,
+        adminComment: adminComment.trim(),
+        hasPendencia: status === "PENDING" && Boolean(adminComment.trim())
+      };
+
+      await prisma.profile.upsert({
+        where: { userId: existingChef.userId },
+        create: {
+          userId: existingChef.userId,
+          preferences: nextPrefs
+        },
+        update: {
+          preferences: nextPrefs
+        }
+      });
     }
 
     const updatedChef = await prisma.chef.update({
@@ -211,14 +313,22 @@ async function updateStatus(req, res) {
       }
     });
 
+    const enrichedChef = {
+      ...updatedChef,
+      adminComment: adminComment.trim(),
+      hasPendencia: status === "PENDING" && Boolean(adminComment.trim())
+    };
+
     res.json({
       message:
         status === "APPROVED"
-          ? "Chef e documentos aprovados com sucesso!"
+          ? "Chef e documentos aprovados e liberados com sucesso!"
           : status === "REJECTED"
           ? "Solicitação do chef recusada."
+          : adminComment.trim()
+          ? "Pendência / comentário registrado para o Chef."
           : "Status alterado para pendente.",
-      chef: updatedChef
+      chef: enrichedChef
     });
   } catch (error) {
     console.error("Erro ao atualizar status do chef:", error);

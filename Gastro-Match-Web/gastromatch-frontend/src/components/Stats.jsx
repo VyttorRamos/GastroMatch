@@ -1,11 +1,22 @@
-const stats = [
-  ["2.5K+", "Receitas disponíveis"],
-  ["850+", "Chefs verificados"],
-  ["45K+", "Usuários ativos"],
-  ["4.8★", "Avaliação média"]
-];
+export default function Stats({ recipes = [], chefs = [], reviews = [] }) {
+  const recipesCount = recipes.length;
+  const chefsCount = chefs.length;
+  const reviewsCount = reviews.length;
 
-export default function Stats() {
+  const avgRating =
+    reviewsCount > 0
+      ? (
+          reviews.reduce((acc, r) => acc + Number(r.rating || 5), 0) / reviewsCount
+        ).toFixed(1)
+      : "5.0";
+
+  const stats = [
+    [String(recipesCount), "Receitas disponíveis"],
+    [String(chefsCount), "Chefs verificados"],
+    [String(reviewsCount), "Avaliações registradas"],
+    [`${avgRating}★`, "Avaliação média"]
+  ];
+
   return (
     <section className="stats-section">
       <div className="container stats-grid">

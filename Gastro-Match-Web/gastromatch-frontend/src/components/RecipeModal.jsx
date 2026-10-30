@@ -22,7 +22,7 @@ export default function RecipeModal({
   onOpenLocation,
   onOpenPurchasedRecipes
 }) {
-  const { user } = useAuth();
+  const { user, showAlert } = useAuth();
   const [activeTab, setActiveTab] = useState("preparo"); // preparo, ingredientes, localizacao, kit, avaliacoes
 
   // Delivery state
@@ -30,13 +30,20 @@ export default function RecipeModal({
   const [freteResult, setFreteResult] = useState(null);
   const [checkingFrete, setCheckingFrete] = useState(false);
 
-  // Reviews state
+  // Reviews state (carregado diretamente da tabela Review no banco)
   const [newRating, setNewRating] = useState(5);
   const [newComment, setNewComment] = useState("");
-  const [reviewsList, setReviewsList] = useState([
-    { id: 1, name: "Lucas Melo", rating: 5, comment: "Excelente receita! O vídeo explica muito bem cada etapa do preparo.", date: "Há 2 dias" },
-    { id: 2, name: "Ana Paula", rating: 5, comment: "Comprei o kit de ingredientes e chegou super fresco! Recomendo.", date: "Há 1 semana" }
-  ]);
+  const [reviewsList, setReviewsList] = useState(() =>
+    Array.isArray(recipe?.reviews)
+      ? recipe.reviews.map((r) => ({
+          id: r.id,
+          name: r.user?.name || "Cliente GastroMatch",
+          rating: r.rating,
+          comment: r.comment,
+          date: r.createdAt ? new Date(r.createdAt).toLocaleDateString("pt-BR") : "Recente"
+        }))
+      : []
+  );
   const [includeKit, setIncludeKit] = useState(false);
 
   const hasAccess = Boolean(user && isPurchased);
@@ -50,14 +57,14 @@ export default function RecipeModal({
     if (recipe?.id) {
       api.reviews(recipe.id)
         .then((data) => {
-          if (Array.isArray(data) && data.length > 0) {
+          if (Array.isArray(data)) {
             setReviewsList(
               data.map((r) => ({
                 id: r.id,
                 name: r.user?.name || "Cliente GastroMatch",
                 rating: r.rating,
                 comment: r.comment,
-                date: new Date(r.createdAt).toLocaleDateString("pt-BR")
+                date: r.createdAt ? new Date(r.createdAt).toLocaleDateString("pt-BR") : "Recente"
               }))
             );
           }
@@ -90,6 +97,7 @@ export default function RecipeModal({
         valorFrete: 9.90,
         restaurante: chefName
       });
+      showAlert && showAlert("Frete e tempo de entrega calculados para o seu CEP!", "success");
     }, 600);
   };
 
@@ -109,6 +117,7 @@ export default function RecipeModal({
     const commentToSend = newComment;
     const ratingToSend = newRating;
     setNewComment("");
+    showAlert && showAlert("Sua avaliação foi publicada com sucesso!", "success");
 
     if (user && recipe?.id) {
       try {
@@ -276,7 +285,13 @@ export default function RecipeModal({
                   <div className="fp-stat-item">
                     <Icon name="star" size={18} />
                     <div>
-                      <strong>{recipe.rating || "4.9"} ({recipe.reviews || "12"})</strong>
+                      <strong>
+                        {recipe.rating || "5.0"} (
+                        {recipe.reviewsCount ??
+                          recipe._count?.reviews ??
+                          reviewsList.length}
+                        )
+                      </strong>
                       <span>Avaliação</span>
                     </div>
                   </div>
@@ -404,17 +419,39 @@ export default function RecipeModal({
                       <ul className="ingredients-list">
                         {recipe.ingredients && recipe.ingredients.length > 0 ? (
                           recipe.ingredients.map((item, idx) => (
-                            <li key={item.id || idx}>
-                              <Icon name="check" size={16} />
-                              <strong>{item.ingredient?.name || item.name}</strong>
-                              {item.quantity && <span> — {item.quantity}</span>}
+                            <li key={item.id || idx} className="ingredient-row-card">
+                              <div className="ing-left">
+                                <span className="ing-check-badge">
+                                  <Icon name="check" size={14} />
+                                </span>
+                                <strong className="ing-name">{item.ingredient?.name || item.name}</strong>
+                              </div>
+                              {item.quantity && <span className="ing-qty-badge">{item.quantity}</span>}
                             </li>
                           ))
                         ) : (
                           <>
-                            <li><Icon name="check" size={16} /> <strong>Insumos frescos selecionados</strong> — Porção artesanal</li>
-                            <li><Icon name="check" size={16} /> <strong>Temperos e especiarias do chef</strong> — Pré-dosados</li>
-                            <li><Icon name="check" size={16} /> <strong>Molho e caldo da casa</strong> — Redução artesanal</li>
+                            <li className="ingredient-row-card">
+                              <div className="ing-left">
+                                <span className="ing-check-badge"><Icon name="check" size={14} /></span>
+                                <strong className="ing-name">Insumos frescos selecionados</strong>
+                              </div>
+                              <span className="ing-qty-badge">Porção artesanal</span>
+                            </li>
+                            <li className="ingredient-row-card">
+                              <div className="ing-left">
+                                <span className="ing-check-badge"><Icon name="check" size={14} /></span>
+                                <strong className="ing-name">Temperos e especiarias do chef</strong>
+                              </div>
+                              <span className="ing-qty-badge">Pré-dosados</span>
+                            </li>
+                            <li className="ingredient-row-card">
+                              <div className="ing-left">
+                                <span className="ing-check-badge"><Icon name="check" size={14} /></span>
+                                <strong className="ing-name">Molho e caldo da casa</strong>
+                              </div>
+                              <span className="ing-qty-badge">Redução artesanal</span>
+                            </li>
                           </>
                         )}
                       </ul>

@@ -19,21 +19,49 @@ async function list(req, res) {
       where,
       include: {
         category: true,
-        chef: { select: { id: true, displayName: true, restaurant: true } },
+        chef: {
+          include: {
+            user: {
+              select: { id: true, name: true, avatarUrl: true, profile: true }
+            },
+            documents: {
+              orderBy: { createdAt: "desc" }
+            }
+          }
+        },
         ingredients: { include: { ingredient: true } },
+        reviews: {
+          include: {
+            user: { select: { id: true, name: true, avatarUrl: true, profile: true } }
+          },
+          orderBy: { createdAt: "desc" }
+        },
         _count: { select: { reviews: true, favorites: true } }
       },
       orderBy: { createdAt: "desc" }
     });
 
     const seenTitles = new Set();
-    const uniqueRecipes = recipes.filter((r) => {
-      const key = (r.title || "").trim().toLowerCase();
-      if (!key) return true;
-      if (seenTitles.has(key)) return false;
-      seenTitles.add(key);
-      return true;
-    });
+    const uniqueRecipes = recipes
+      .filter((r) => {
+        const key = (r.title || "").trim().toLowerCase();
+        if (!key) return true;
+        if (seenTitles.has(key)) return false;
+        seenTitles.add(key);
+        return true;
+      })
+      .map((r) => {
+        const ratings = (r.reviews || []).map((rev) => Number(rev.rating));
+        const avgRating =
+          ratings.length > 0
+            ? Number((ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1))
+            : null;
+        return {
+          ...r,
+          rating: avgRating,
+          reviewsCount: r._count?.reviews ?? ratings.length
+        };
+      });
 
     res.json(uniqueRecipes);
   } catch (error) {
@@ -48,10 +76,19 @@ async function getById(req, res) {
       where: { id: Number(req.params.id) },
       include: {
         category: true,
-        chef: true,
+        chef: {
+          include: {
+            user: {
+              select: { id: true, name: true, avatarUrl: true, profile: true }
+            },
+            documents: {
+              orderBy: { createdAt: "desc" }
+            }
+          }
+        },
         ingredients: { include: { ingredient: true } },
         reviews: {
-          include: { user: { select: { id: true, name: true, avatarUrl: true } } },
+          include: { user: { select: { id: true, name: true, avatarUrl: true, profile: true } } },
           orderBy: { createdAt: "desc" }
         }
       }

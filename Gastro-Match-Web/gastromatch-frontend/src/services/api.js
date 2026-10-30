@@ -15,7 +15,10 @@ async function request(path, options = {}) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.message || "Não foi possível concluir a solicitação.");
+    const err = new Error(data.message || "Não foi possível concluir a solicitação.");
+    err.status = response.status;
+    err.code = data.code || null;
+    throw err;
   }
 
   return data;
@@ -28,10 +31,10 @@ export const api = {
       body: JSON.stringify({ email, password })
     }),
 
-  register: (name, email, password, role = "USER") =>
+  register: (name, email, password, role = "USER", extraData = {}) =>
     request("/auth/register", {
       method: "POST",
-      body: JSON.stringify({ name, email, password, role })
+      body: JSON.stringify({ name, email, password, role, ...extraData })
     }),
 
   me: () => request("/auth/me"),
@@ -48,6 +51,10 @@ export const api = {
   recipe: (id) => request(`/recipes/${id}`),
 
   categories: () => request("/categories"),
+
+  chefs: () => request("/chefs"),
+
+  allReviews: () => request("/reviews"),
 
   favorites: () => request("/favorites"),
 
@@ -108,9 +115,9 @@ export const api = {
 
   adminChefApplications: () => request("/chefs/admin/applications"),
 
-  adminUpdateChefStatus: (chefId, status) =>
+  adminUpdateChefStatus: (chefId, status, adminComment = "") =>
     request(`/chefs/admin/${chefId}/status`, {
       method: "PATCH",
-      body: JSON.stringify({ status })
+      body: JSON.stringify({ status, adminComment })
     })
 };

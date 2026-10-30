@@ -3,146 +3,8 @@ import Icon from "./Icon";
 import { api } from "../services/api";
 import { useAuth } from "../services/AuthContext";
 
-const INITIAL_FALLBACK_APPLICATIONS = [
-  {
-    id: 501,
-    displayName: "Chef Henrique Fogaça Silva",
-    restaurant: "Bistrô Fogo & Brasa",
-    cnpj: "42.819.304/0001-72",
-    description: "Localização: Florianópolis - SC • Carnes Nobres & Defumados",
-    status: "PENDING",
-    createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-    user: {
-      name: "Chef Henrique Fogaça Silva",
-      email: "henrique@fogobrasa.com.br",
-      profile: { city: "Florianópolis - SC" }
-    },
-    documents: [
-      {
-        id: 901,
-        type: "Alvará Sanitário Vigente (Vigilância Municipal)",
-        fileUrl: "alvara_sanitario_bistro_fogo_brasa_2026.pdf",
-        createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString()
-      },
-      {
-        id: 902,
-        type: "Comprovante de Inscrição e Situação Cadastral (CNPJ)",
-        fileUrl: "cartao_cnpj_42819304000172.pdf",
-        createdAt: new Date(Date.now() - 1000 * 60 * 44).toISOString()
-      }
-    ],
-    _count: { recipes: 0 }
-  },
-  {
-    id: 502,
-    displayName: "Chef Helena Rizzo Costa",
-    restaurant: "Maní Contemporâneo Sul",
-    cnpj: "19.503.721/0001-18",
-    description: "Localização: Balneário Camboriú - SC • Gastronomia Autoral Brasileira",
-    status: "PENDING",
-    createdAt: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
-    user: {
-      name: "Chef Helena Rizzo Costa",
-      email: "helena@manisul.com.br",
-      profile: { city: "Balneário Camboriú - SC" }
-    },
-    documents: [
-      {
-        id: 903,
-        type: "Certificado de Boas Práticas de Manipulação de Alimentos (ANVISA)",
-        fileUrl: "certificado_anvisa_mani_sul.pdf",
-        createdAt: new Date(Date.now() - 1000 * 60 * 180).toISOString()
-      }
-    ],
-    _count: { recipes: 0 }
-  },
-  {
-    id: 1,
-    displayName: "Chef Gabriel Camillo",
-    restaurant: "Ristorante Camillo",
-    cnpj: "12.345.678/0001-90",
-    description: "Especialista em risotos e culinária mediterrânea clássica.",
-    status: "APPROVED",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-    user: {
-      name: "Chef Gabriel Camillo",
-      email: "gabriel@gastromatch.com",
-      profile: { city: "Florianópolis - SC" }
-    },
-    documents: [
-      {
-        id: 904,
-        type: "Alvará Sanitário Vigente (Vigilância Municipal)",
-        fileUrl: "alvara_ristorante_camillo.pdf",
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString()
-      }
-    ],
-    _count: { recipes: 1 }
-  },
-  {
-    id: 6,
-    displayName: "Chef Yasmin Lobo",
-    restaurant: "Ateliê Doce Lobo",
-    cnpj: "28.910.445/0001-33",
-    description: "Confeiteira formada na Le Cordon Bleu, apaixonada por chocolates e doces finos.",
-    status: "APPROVED",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(),
-    user: {
-      name: "Chef Yasmin Lobo",
-      email: "yasmin@gastromatch.com",
-      profile: { city: "Florianópolis - SC" }
-    },
-    documents: [
-      {
-        id: 905,
-        type: "Licença da Vigilância Sanitária Municipal",
-        fileUrl: "licenca_atelie_doce_lobo.pdf",
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString()
-      }
-    ],
-    _count: { recipes: 1 }
-  },
-  {
-    id: 5,
-    displayName: "Chef Otavio de Deus",
-    restaurant: "Cantinho Brasileiro",
-    cnpj: "33.741.852/0001-09",
-    description: "Preservando e inovando a rica tradição dos pratos típicos brasileiros.",
-    status: "APPROVED",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 96).toISOString(),
-    user: {
-      name: "Chef Otavio de Deus",
-      email: "otavio@gastromatch.com",
-      profile: { city: "São Paulo - SP" }
-    },
-    documents: [
-      {
-        id: 906,
-        type: "Alvará Sanitário Vigente (Vigilância Municipal)",
-        fileUrl: "alvara_cantinho_brasileiro.pdf",
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 96).toISOString()
-      }
-    ],
-    _count: { recipes: 1 }
-  }
-];
-
-function getLocalApplications() {
-  try {
-    const raw = localStorage.getItem("gastromatch_chef_applications");
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch {
-    // ignore
-  }
-  localStorage.setItem("gastromatch_chef_applications", JSON.stringify(INITIAL_FALLBACK_APPLICATIONS));
-  return INITIAL_FALLBACK_APPLICATIONS;
-}
-
-export default function AdminDashboardPage({ onBackToStore }) {
-  const { user, login, logout } = useAuth();
+export default function AdminDashboardPage({ onBackToStore, onChefStatusUpdated }) {
+  const { user, login, logout, showAlert } = useAuth();
   const isAdmin = Boolean(user && user.role === "ADMIN");
 
   const [loginEmail, setLoginEmail] = useState("admin@gastromatch.com");
@@ -150,12 +12,13 @@ export default function AdminDashboardPage({ onBackToStore }) {
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [applications, setApplications] = useState(() => getLocalApplications());
+  const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState("ALL"); // ALL | PENDING | APPROVED | REJECTED
   const [searchTerm, setSearchTerm] = useState("");
   const [feedbackMsg, setFeedbackMsg] = useState("");
   const [inspectingDoc, setInspectingDoc] = useState(null); // { chef, doc }
+  const [commentDrafts, setCommentDrafts] = useState({});
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -164,23 +27,59 @@ export default function AdminDashboardPage({ onBackToStore }) {
     }
   }, [isAdmin]);
 
+  function getStoredLocalApps() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem("gastromatch_chef_applications") || "[]");
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
   async function loadApplications() {
     setLoading(true);
+    const localList = getStoredLocalApps();
     try {
-      const localList = getLocalApplications();
       const apiList = await api.adminChefApplications();
       if (Array.isArray(apiList) && apiList.length > 0) {
-        // Merge any pending local items with database items
-        const dbEmails = new Set(apiList.map((c) => c.user?.email).filter(Boolean));
-        const localExtras = localList.filter((item) => !dbEmails.has(item.user?.email));
-        const merged = [...localExtras, ...apiList];
+        const localByEmail = new Map(
+          localList
+            .filter((item) => item.user?.email)
+            .map((item) => [item.user.email.trim().toLowerCase(), item])
+        );
+        const dbEmails = new Set(
+          apiList.map((c) => (c.user?.email || "").trim().toLowerCase()).filter(Boolean)
+        );
+        const mergedApi = apiList.map((dbItem) => {
+          const emailKey = (dbItem.user?.email || "").trim().toLowerCase();
+          const localMatch = localByEmail.get(emailKey);
+          if (!localMatch) return dbItem;
+          return {
+            ...dbItem,
+            password: localMatch.password,
+            status: localMatch.updatedAt ? localMatch.status : dbItem.status,
+            adminComment: localMatch.adminComment ?? dbItem.adminComment ?? "",
+            hasPendencia: Boolean(localMatch.hasPendencia ?? dbItem.hasPendencia),
+            documents:
+              Array.isArray(localMatch.documents) &&
+              localMatch.documents.length >= (dbItem.documents?.length || 0)
+                ? localMatch.documents
+                : dbItem.documents,
+            updatedAt: localMatch.updatedAt || dbItem.updatedAt
+          };
+        });
+        const localExtras = localList.filter(
+          (item) => !dbEmails.has((item.user?.email || "").trim().toLowerCase())
+        );
+        const merged = [...localExtras, ...mergedApi];
         setApplications(merged);
         localStorage.setItem("gastromatch_chef_applications", JSON.stringify(merged));
       } else {
         setApplications(localList);
       }
-    } catch {
-      setApplications(getLocalApplications());
+    } catch (err) {
+      console.warn("Usando solicitações locais:", err.message);
+      setApplications(localList);
     } finally {
       setLoading(false);
     }
@@ -191,7 +90,7 @@ export default function AdminDashboardPage({ onBackToStore }) {
     setLoginError("");
     setLoginLoading(true);
     try {
-      const loggedUser = await login(loginEmail, loginPassword);
+      const loggedUser = await login(loginEmail, loginPassword, "ADMIN");
       if (loggedUser.role !== "ADMIN") {
         setLoginError("Esta conta não possui privilégios de Administrador. Use admin@gastromatch.com.");
       }
@@ -202,46 +101,77 @@ export default function AdminDashboardPage({ onBackToStore }) {
     }
   }
 
-  async function handleQuickAdminLogin() {
-    setLoginError("");
-    setLoginLoading(true);
-    try {
-      await login("admin@gastromatch.com", "123456");
-    } catch (err) {
-      setLoginError(err.message || "Erro ao acessar conta de administrador.");
-    } finally {
-      setLoginLoading(false);
-    }
-  }
-
-  async function handleDecision(chef, newStatus) {
+  async function handleDecision(chef, newStatus, customComment, isPendencia = false) {
     setFeedbackMsg("");
-    try {
-      await api.adminUpdateChefStatus(chef.id, newStatus).catch(() => null);
-    } catch {
-      // fallback to local update
+    const commentText = (
+      customComment !== undefined
+        ? customComment
+        : commentDrafts[chef.id] !== undefined
+        ? commentDrafts[chef.id]
+        : chef.adminComment || ""
+    ).trim();
+
+    if (isPendencia && !commentText) {
+      alert("Digite um comentário explicando a pendência para o Chef antes de enviar.");
+      return;
     }
+
+    let apiChef = null;
+    try {
+      const res = await api.adminUpdateChefStatus(chef.id, newStatus, commentText);
+      apiChef = res?.chef || null;
+    } catch {
+      // Fallback para persistência local caso o admin esteja em sessão local ou chef criado localmente
+    }
+
+    const updatedFields = {
+      ...(apiChef || {}),
+      status: newStatus,
+      adminComment: commentText,
+      hasPendencia: Boolean(isPendencia || (newStatus === "PENDING" && commentText)),
+      updatedAt: new Date().toISOString()
+    };
 
     setApplications((prev) => {
-      const updated = prev.map((item) =>
-        item.id === chef.id ? { ...item, status: newStatus, updatedAt: new Date().toISOString() } : item
+      const next = prev.map((item) =>
+        item.id === chef.id ||
+        (item.user?.email &&
+          chef.user?.email &&
+          item.user.email.toLowerCase() === chef.user.email.toLowerCase())
+          ? { ...item, ...updatedFields }
+          : item
       );
-      localStorage.setItem("gastromatch_chef_applications", JSON.stringify(updated));
-      return updated;
+      localStorage.setItem("gastromatch_chef_applications", JSON.stringify(next));
+      return next;
     });
+
+    if (onChefStatusUpdated) onChefStatusUpdated();
 
     const label =
       newStatus === "APPROVED"
-        ? `Estabelecimento "${chef.restaurant || chef.displayName}" APROVADO e homologado com sucesso!`
+        ? `Chef "${chef.displayName}" (${chef.restaurant || "Estabelecimento"}) LIBERADO e homologado com sucesso!`
         : newStatus === "REJECTED"
-        ? `Solicitação de "${chef.restaurant || chef.displayName}" marcada como RECUSADA.`
-        : `Solicitação de "${chef.restaurant || chef.displayName}" retornada para PENDENTE.`;
+        ? `Cadastro de "${chef.displayName}" marcado como RECUSADO.`
+        : commentText
+        ? `Comentário / Pendência enviada para "${chef.displayName}": "${commentText}"`
+        : `Solicitação de "${chef.displayName}" retornada para PENDENTE.`;
 
     setFeedbackMsg(label);
-    setTimeout(() => setFeedbackMsg(""), 5000);
+    showAlert &&
+      showAlert(
+        label,
+        newStatus === "APPROVED"
+          ? "success"
+          : newStatus === "REJECTED"
+          ? "error"
+          : "warning"
+      );
+    setTimeout(() => setFeedbackMsg(""), 5500);
 
     if (inspectingDoc && inspectingDoc.chef.id === chef.id) {
-      setInspectingDoc((prev) => (prev ? { ...prev, chef: { ...prev.chef, status: newStatus } } : null));
+      setInspectingDoc((prev) =>
+        prev ? { ...prev, chef: { ...prev.chef, ...updatedFields } } : null
+      );
     }
   }
 
@@ -560,7 +490,7 @@ export default function AdminDashboardPage({ onBackToStore }) {
                     {/* Documentos Anexados */}
                     <div className="admin-docs-section">
                       <span className="admin-docs-label">
-                        <Icon name="fileText" size={14} /> Documentos Recebidos ({docs.length}):
+                        <Icon name="fileText" size={14} /> Documentos Enviados pelo Chef ({docs.length}):
                       </span>
                       <div className="admin-docs-grid">
                         {docs.map((doc) => (
@@ -573,8 +503,13 @@ export default function AdminDashboardPage({ onBackToStore }) {
                                   Arquivo:{" "}
                                   {doc.fileUrl?.startsWith("data:")
                                     ? doc.fileName || "documento_digitalizado_anexo"
-                                    : doc.fileUrl}
+                                    : doc.fileName || doc.fileUrl}
                                 </span>
+                                {doc.chefNote && (
+                                  <span style={{ display: "block", color: "#b45309", marginTop: 2 }}>
+                                    Nota do Chef: &ldquo;{doc.chefNote}&rdquo;
+                                  </span>
+                                )}
                               </div>
                             </div>
                             <button
@@ -589,13 +524,91 @@ export default function AdminDashboardPage({ onBackToStore }) {
                       </div>
                     </div>
 
+                    {/* Área de Comentário / Pendência do Administrador */}
+                    <div
+                      style={{
+                        marginTop: "14px",
+                        padding: "14px 16px",
+                        borderRadius: "12px",
+                        background: "#fdfbf4",
+                        border: "1px solid #ece4ce"
+                      }}
+                    >
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "12.5px",
+                          fontWeight: 700,
+                          color: "#334155",
+                          marginBottom: "6px"
+                        }}
+                      >
+                        💬 Comentário do Admin / Registro de Pendência para o Chef:
+                      </label>
+                      {chef.adminComment && (
+                        <div
+                          style={{
+                            fontSize: "12.5px",
+                            color: "#92400e",
+                            background: "#fffbeb",
+                            border: "1px solid #fcd34d",
+                            padding: "6px 10px",
+                            borderRadius: "8px",
+                            marginBottom: "8px"
+                          }}
+                        >
+                          <strong>Último parecer enviado ao Chef:</strong> &ldquo;{chef.adminComment}&rdquo;
+                        </div>
+                      )}
+                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                        <input
+                          type="text"
+                          placeholder="Escreva uma observação, pendência de documento ou parecer para este chef..."
+                          value={
+                            commentDrafts[chef.id] !== undefined
+                              ? commentDrafts[chef.id]
+                              : chef.adminComment || ""
+                          }
+                          onChange={(e) =>
+                            setCommentDrafts((prev) => ({
+                              ...prev,
+                              [chef.id]: e.target.value
+                            }))
+                          }
+                          style={{
+                            flex: 1,
+                            minWidth: "240px",
+                            padding: "9px 12px",
+                            borderRadius: "8px",
+                            border: "1px solid #cbd5e1",
+                            fontSize: "13px",
+                            background: "#fff"
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="button button-small button-outline"
+                          onClick={() =>
+                            handleDecision(
+                              chef,
+                              "PENDING",
+                              commentDrafts[chef.id] ?? chef.adminComment ?? "",
+                              true
+                            )
+                          }
+                        >
+                          ⚠️ Enviar Comentário / Pendência
+                        </button>
+                      </div>
+                    </div>
+
                     {/* Botões de Ação do Admin */}
                     <div className="admin-decision-bar">
                       <div className="admin-decision-hint">
                         {chef.status === "PENDING"
-                          ? "Confira o documento acima e aprove ou recuse o credenciamento:"
+                          ? "Confira os documentos acima, registre uma pendência ou libere o Chef:"
                           : chef.status === "APPROVED"
-                          ? "Este estabelecimento já está autorizado a publicar receitas e vender kits."
+                          ? "Este Chef já está LIBERADO para publicar receitas e vender kits."
                           : "Este cadastro foi recusado. Você pode reavaliar se o chef enviou novos documentos."}
                       </div>
 
@@ -604,16 +617,30 @@ export default function AdminDashboardPage({ onBackToStore }) {
                           <button
                             type="button"
                             className="button button-small admin-btn-approve"
-                            onClick={() => handleDecision(chef, "APPROVED")}
+                            onClick={() =>
+                              handleDecision(
+                                chef,
+                                "APPROVED",
+                                commentDrafts[chef.id] ?? chef.adminComment ?? "",
+                                false
+                              )
+                            }
                           >
-                            <Icon name="check" size={15} /> Aprovar Chef & Homologar
+                            <Icon name="check" size={15} /> Liberar Chef (Aprovar & Homologar)
                           </button>
                         )}
                         {chef.status !== "REJECTED" && (
                           <button
                             type="button"
                             className="button button-small button-outline admin-btn-reject"
-                            onClick={() => handleDecision(chef, "REJECTED")}
+                            onClick={() =>
+                              handleDecision(
+                                chef,
+                                "REJECTED",
+                                commentDrafts[chef.id] ?? chef.adminComment ?? "",
+                                false
+                              )
+                            }
                           >
                             <Icon name="x" size={14} /> Recusar Documentos
                           </button>
@@ -622,7 +649,14 @@ export default function AdminDashboardPage({ onBackToStore }) {
                           <button
                             type="button"
                             className="button button-small button-outline"
-                            onClick={() => handleDecision(chef, "PENDING")}
+                            onClick={() =>
+                              handleDecision(
+                                chef,
+                                "PENDING",
+                                commentDrafts[chef.id] ?? chef.adminComment ?? "",
+                                false
+                              )
+                            }
                           >
                             Voltar para Pendente
                           </button>
@@ -703,37 +737,89 @@ export default function AdminDashboardPage({ onBackToStore }) {
               )}
             </div>
 
-            <div className="admin-doc-modal-actions">
-              <button
-                type="button"
-                className="button button-outline button-small"
-                onClick={() => setInspectingDoc(null)}
-              >
-                Fechar Visualização
-              </button>
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                {inspectingDoc.chef.status !== "REJECTED" && (
-                  <button
-                    type="button"
-                    className="button button-small button-outline admin-btn-reject"
-                    onClick={() => {
-                      handleDecision(inspectingDoc.chef, "REJECTED");
-                      setInspectingDoc(null);
-                    }}
-                  >
-                    <Icon name="x" size={14} /> Recusar
-                  </button>
-                )}
+            <div className="admin-doc-modal-actions" style={{ flexDirection: "column", alignItems: "stretch", gap: "12px" }}>
+              <div style={{ display: "flex", gap: "8px", width: "100%" }}>
+                <input
+                  type="text"
+                  placeholder="Adicionar comentário ou pendência sobre este documento..."
+                  value={
+                    commentDrafts[inspectingDoc.chef.id] !== undefined
+                      ? commentDrafts[inspectingDoc.chef.id]
+                      : inspectingDoc.chef.adminComment || ""
+                  }
+                  onChange={(e) =>
+                    setCommentDrafts((prev) => ({
+                      ...prev,
+                      [inspectingDoc.chef.id]: e.target.value
+                    }))
+                  }
+                  style={{
+                    flex: 1,
+                    padding: "9px 12px",
+                    borderRadius: "8px",
+                    border: "1px solid #cbd5e1",
+                    fontSize: "13px"
+                  }}
+                />
                 <button
                   type="button"
-                  className="button button-small admin-btn-approve"
+                  className="button button-small button-outline"
                   onClick={() => {
-                    handleDecision(inspectingDoc.chef, "APPROVED");
+                    handleDecision(
+                      inspectingDoc.chef,
+                      "PENDING",
+                      commentDrafts[inspectingDoc.chef.id] ?? inspectingDoc.chef.adminComment ?? "",
+                      true
+                    );
                     setInspectingDoc(null);
                   }}
                 >
-                  <Icon name="check" size={15} /> Aprovar Documento & Chef
+                  ⚠️ Registrar Pendência
                 </button>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                <button
+                  type="button"
+                  className="button button-outline button-small"
+                  onClick={() => setInspectingDoc(null)}
+                >
+                  Fechar Visualização
+                </button>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  {inspectingDoc.chef.status !== "REJECTED" && (
+                    <button
+                      type="button"
+                      className="button button-small button-outline admin-btn-reject"
+                      onClick={() => {
+                        handleDecision(
+                          inspectingDoc.chef,
+                          "REJECTED",
+                          commentDrafts[inspectingDoc.chef.id] ?? inspectingDoc.chef.adminComment ?? "",
+                          false
+                        );
+                        setInspectingDoc(null);
+                      }}
+                    >
+                      <Icon name="x" size={14} /> Recusar
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="button button-small admin-btn-approve"
+                    onClick={() => {
+                      handleDecision(
+                        inspectingDoc.chef,
+                        "APPROVED",
+                        commentDrafts[inspectingDoc.chef.id] ?? inspectingDoc.chef.adminComment ?? "",
+                        false
+                      );
+                      setInspectingDoc(null);
+                    }}
+                  >
+                    <Icon name="check" size={15} /> Liberar Chef (Aprovar Documento)
+                  </button>
+                </div>
               </div>
             </div>
           </div>

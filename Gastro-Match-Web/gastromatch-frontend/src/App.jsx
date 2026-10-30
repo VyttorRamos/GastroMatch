@@ -22,61 +22,8 @@ import FavoritesModal from "./components/FavoritesModal";
 import { AuthProvider, useAuth } from "./services/AuthContext";
 import { api } from "./services/api";
 
-const fallbackRecipes = [
-  {
-    id: 101,
-    title: "Risoto de Cogumelos Selvagens", chef: { displayName: "Chef Gabriel Camillo" }, price: "29.90",
-    rating: "4.8", reviews: "234", time: "45 min", difficulty: "Médio", category: "Massas",
-    image: "https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&w=900&q=80",
-    description: "Um clássico cremoso da gastronomia italiana preparado com funghi secchi, cogumelos frescos e manteiga trufada.",
-    instructions: "Refogue a cebola no azeite, junte o arroz arbóreo e deglace com vinho branco. Adicione o caldo de cogumelos quente aos poucos, mexendo constantemente por 18 minutos."
-  },
-  {
-    id: 102,
-    title: "Pasta Carbonara Autêntica", chef: { displayName: "Chef Marco" }, price: "24.90",
-    rating: "4.9", reviews: "189", time: "20 min", difficulty: "Fácil", category: "Massas",
-    image: "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=900&q=80",
-    description: "A autêntica receita romana com guanciale artesanal, gemas de ovos caipiras e queijo Pecorino Romano.",
-    instructions: "Dore o guanciale na própria gordura. Misture as gemas com o pecorino e pimenta do reino. Desligue o fogo e emulsione a massa com a mistura de gemas."
-  },
-  {
-    id: 103,
-    title: "Sushi Assortido & Omakase", chef: { displayName: "Chef Yuki Tanaka" }, price: "39.90",
-    rating: "4.7", reviews: "312", time: "60 min", difficulty: "Difícil", category: "Japonesa",
-    image: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=900&q=80",
-    description: "Técnicas milenares de corte de salmão, atum e tempero Shari para criar nigiris e uramakis com perfeição.",
-    instructions: "Prepare o tempero Su para o arroz. Efetue o corte inclinado no filé de salmão e modele os nigiris com pressão sutil nos dedos."
-  },
-  {
-    id: 104,
-    title: "Tacos al Pastor & Molhos Artesanais", chef: { displayName: "Casa Mexicana" }, price: "22.90",
-    rating: "4.8", reviews: "167", time: "35 min", difficulty: "Médio", category: "Mexicana",
-    image: "https://images.unsplash.com/photo-1552332386-f8dd00dc2f85?auto=format&fit=crop&w=900&q=80",
-    description: "Carne suína marinada em achiote e especiarias mexicanas, servida em tortilhas de milho com abacaxi e salsa verde.",
-    instructions: "Marine a carne no achiote e suco de laranja amarga. Sele na chapa em alta temperatura para caramelizar os bordos."
-  },
-  {
-    id: 105,
-    title: "Feijoada Gourmet Completa", chef: { displayName: "Chef Otavio de Deus" }, price: "34.90",
-    rating: "4.95", reviews: "410", time: "90 min", difficulty: "Médio", category: "Brasileira",
-    image: "https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=900&q=80",
-    description: "Feijoada tradicional dessalgada com carnes nobres, acompanhada de farofa de mandioca na manteiga de garrafa e couve crisp.",
-    instructions: "Cozinhe o feijão preto com louro fresco. Adicione as carnes previamente dessalgadas e apure o caldo até encorpar."
-  },
-  {
-    id: 106,
-    title: "Petit Gâteau com Calda Cremosa", chef: { displayName: "Chef Yasmin Lobo" }, price: "19.90",
-    rating: "4.9", reviews: "285", time: "25 min", difficulty: "Fácil", category: "Sobremesas",
-    image: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=900&q=80",
-    description: "Bolo de chocolate com centro quente derretido, servido com sorvete de baunilha e farofa de castanhas.",
-    instructions: "Derreta o chocolate 70% com a manteiga. Misture ovos e açúcar levemente. Asse a 200°C por exatamente 8 minutos."
-  }
-];
-
-const categories = ["Todas", "Massas", "Brasileira", "Japonesa", "Mexicana", "Sobremesas", "Minhas Compras 🔓", "Favoritos ❤️"];
-
 function GastroMatchApp() {
-  const { user } = useAuth();
+  const { user, showAlert } = useAuth();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Todas");
   const [selectedDifficulty, setSelectedDifficulty] = useState("Todas");
@@ -91,7 +38,7 @@ function GastroMatchApp() {
   const [locationTarget, setLocationTarget] = useState(null);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [favoritesModalOpen, setFavoritesModalOpen] = useState(false);
-  const [currentView, setCurrentView] = useState("store"); // "store" | "chef"
+  const [currentView, setCurrentView] = useState("store"); // "store" | "chef" | "admin"
   const [selectedChef, setSelectedChef] = useState(null);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
 
@@ -115,47 +62,66 @@ function GastroMatchApp() {
       const exists = prev.includes(recipeId);
       const updated = exists ? prev.filter((id) => id !== recipeId) : [...prev, recipeId];
       localStorage.setItem("gastromatch_favorites", JSON.stringify(updated));
+      const matched = recipes.find((r) => r.id === recipeId);
+      const titleLabel = matched?.title ? `"${matched.title}"` : "Receita";
+      showAlert &&
+        showAlert(
+          exists
+            ? `${titleLabel} removida dos seus Favoritos.`
+            : `${titleLabel} adicionada aos seus Favoritos!`,
+          exists ? "info" : "success"
+        );
       return updated;
     });
   };
 
-  const [recipes, setRecipes] = useState(fallbackRecipes);
+  const [recipes, setRecipes] = useState([]);
+  const [chefs, setChefs] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [dbCategories, setDbCategories] = useState([]);
   const [apiConnected, setApiConnected] = useState(false);
 
-  const fetchRecipes = () => {
-    api.recipes()
-      .then((data) => {
-        if (Array.isArray(data) && data.length) {
-          const seenTitles = new Set();
-          const deduplicated = [];
-          for (const rec of [...data, ...fallbackRecipes]) {
-            const normTitle = (rec.title || "").trim().toLowerCase();
-            if (normTitle && seenTitles.has(normTitle)) continue;
-            if (normTitle) seenTitles.add(normTitle);
-            deduplicated.push({
+  const categories = useMemo(() => {
+    const names = dbCategories.map((c) => c.name);
+    return ["Todas", ...names, "Minhas Compras 🔓", "Favoritos ❤️"];
+  }, [dbCategories]);
+
+  const fetchDatabaseCatalog = () => {
+    Promise.all([
+      api.recipes(),
+      api.chefs(),
+      api.allReviews(),
+      api.categories()
+    ])
+      .then(([recipesData, chefsData, reviewsData, categoriesData]) => {
+        if (Array.isArray(recipesData)) {
+          setRecipes(
+            recipesData.map((rec) => ({
               ...rec,
               imageUrl: rec.imageUrl || getRecipeDisplayImage(rec)
-            });
-          }
-          setRecipes(deduplicated);
-        } else {
-          setRecipes(fallbackRecipes);
+            }))
+          );
+        }
+        if (Array.isArray(chefsData)) {
+          setChefs(chefsData);
+        }
+        if (Array.isArray(reviewsData)) {
+          setReviews(reviewsData);
+        }
+        if (Array.isArray(categoriesData)) {
+          setDbCategories(categoriesData);
         }
         setApiConnected(true);
       })
       .catch((error) => {
         console.warn("API indisponível:", error.message);
-        setRecipes(fallbackRecipes);
         setApiConnected(false);
       });
   };
 
   useEffect(() => {
-    fetchRecipes();
+    fetchDatabaseCatalog();
   }, []);
-
-  const getStorageOrdersKey = (u) =>
-    u ? `gastromatch_orders_${u.id || u.email}` : null;
 
   useEffect(() => {
     if (!user) {
@@ -163,35 +129,12 @@ function GastroMatchApp() {
       return;
     }
 
-    const storageKey = getStorageOrdersKey(user);
-    let localOrders = [];
-    try {
-      localOrders = JSON.parse(localStorage.getItem(storageKey) || "[]");
-    } catch {
-      localOrders = [];
-    }
-
     api.orders()
       .then((apiList) => {
-        if (Array.isArray(apiList)) {
-          const mergedMap = new Map();
-          [...localOrders, ...apiList].forEach((ord) => {
-            if (ord && ord.id) {
-              const prev = mergedMap.get(ord.id);
-              mergedMap.set(ord.id, prev ? { ...ord, ...prev, status: ord.status === "PAID" ? "PAID" : prev.status || ord.status } : ord);
-            }
-          });
-          const merged = Array.from(mergedMap.values()).sort(
-            (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
-          );
-          setUserOrders(merged);
-          localStorage.setItem(storageKey, JSON.stringify(merged));
-        } else {
-          setUserOrders(localOrders);
-        }
+        setUserOrders(Array.isArray(apiList) ? apiList : []);
       })
       .catch(() => {
-        setUserOrders(localOrders);
+        setUserOrders([]);
       });
   }, [user]);
 
@@ -258,30 +201,41 @@ function GastroMatchApp() {
   const handleAddToCart = (item) => {
     if (!user) {
       setAuthOpen(true);
-      setToastMessage("Faça login na sua conta para comprar receitas!");
-      setTimeout(() => setToastMessage(""), 3500);
+      showAlert && showAlert("Faça login na sua conta para comprar receitas!", "warning");
       return;
     }
     setCartItems((prev) => [...prev, item]);
-    setToastMessage(`"${item.recipe?.title || item.title}" adicionado à sacola!`);
-    setTimeout(() => setToastMessage(""), 3500);
+    showAlert &&
+      showAlert(
+        `"${item.recipe?.title || item.title}" adicionado à sacola!`,
+        "success"
+      );
   };
 
   const handleBuyNow = (item) => {
     if (!user) {
       setAuthOpen(true);
-      setToastMessage("Faça login na sua conta para comprar e liberar a receita!");
-      setTimeout(() => setToastMessage(""), 3500);
+      showAlert &&
+        showAlert(
+          "Faça login na sua conta para comprar e liberar a receita!",
+          "warning"
+        );
       return;
     }
     const price = item.totalPrice || Number(item.recipe?.price || item.price || 29.9);
     setCartItems([item]);
     setPaymentTotal(price);
     setPaymentModalOpen(true);
+    showAlert &&
+      showAlert(
+        `Iniciando pagamento de "${item.recipe?.title || item.title}"...`,
+        "info"
+      );
   };
 
   const handleRemoveCartItem = (index) => {
     setCartItems((prev) => prev.filter((_, i) => i !== index));
+    showAlert && showAlert("Item removido da sacola.", "info");
   };
 
   const recordPaidOrder = (completedOrder) => {
@@ -307,20 +261,24 @@ function GastroMatchApp() {
 
     setUserOrders((prev) => {
       const filtered = prev.filter((o) => o.id !== newOrder.id);
-      const updated = [newOrder, ...filtered];
-      const storageKey = getStorageOrdersKey(user);
-      if (storageKey) {
-        localStorage.setItem(storageKey, JSON.stringify(updated));
-      }
-      return updated;
+      return [newOrder, ...filtered];
     });
+
+    api.orders()
+      .then((apiList) => {
+        if (Array.isArray(apiList)) setUserOrders(apiList);
+      })
+      .catch(() => {});
   };
 
   const handlePaymentCompleted = (completedOrder) => {
     recordPaidOrder(completedOrder);
     setCartItems([]);
-    setToastMessage("Pagamento confirmado! Receita liberada em Minhas Receitas Compradas.");
-    setTimeout(() => setToastMessage(""), 4500);
+    showAlert &&
+      showAlert(
+        "Pagamento confirmado! Receita liberada em Minhas Receitas Compradas.",
+        "success"
+      );
   };
 
   const filteredRecipes = useMemo(() => {
@@ -400,7 +358,11 @@ function GastroMatchApp() {
   if (currentView === "admin") {
     return (
       <AdminDashboardPage
-        onBackToStore={() => setCurrentView("store")}
+        onBackToStore={() => {
+          fetchDatabaseCatalog();
+          setCurrentView("store");
+        }}
+        onChefStatusUpdated={fetchDatabaseCatalog}
       />
     );
   }
@@ -408,8 +370,11 @@ function GastroMatchApp() {
   if (currentView === "chef") {
     return (
       <ChefDashboardPage
-        onBackToStore={() => setCurrentView("store")}
-        onRecipeCreated={fetchRecipes}
+        onBackToStore={() => {
+          fetchDatabaseCatalog();
+          setCurrentView("store");
+        }}
+        onRecipeCreated={fetchDatabaseCatalog}
         onOpenAdminDashboard={() => setCurrentView("admin")}
       />
     );
@@ -502,7 +467,7 @@ function GastroMatchApp() {
           </div>
         </section>
 
-        <Stats />
+        <Stats recipes={recipes} chefs={chefs} reviews={reviews} />
 
         {user && (
           <UserDashboardBanner
@@ -526,6 +491,7 @@ function GastroMatchApp() {
 
         {/* Featured Chefs Section */}
         <FeaturedChefs
+          chefs={chefs}
           onOpenChefDashboard={() => setCurrentView("chef")}
           onSelectChef={(chef) => setSelectedChef(chef)}
         />
@@ -708,7 +674,7 @@ function GastroMatchApp() {
         </section>
 
         {/* Testimonials Section */}
-        <Testimonials />
+        <Testimonials reviews={reviews} />
 
         <section className="cta-section">
           <div className="container">
@@ -735,6 +701,8 @@ function GastroMatchApp() {
           onLoginSuccess={(loggedUser) => {
             if (loggedUser?.role === "ADMIN") {
               setCurrentView("admin");
+            } else if (loggedUser?.role === "CHEF" || loggedUser?.chef) {
+              setCurrentView("chef");
             }
           }}
         />
@@ -805,13 +773,16 @@ function GastroMatchApp() {
         onClose={() => setCartOpen(false)}
         cartItems={cartItems}
         onRemoveItem={handleRemoveCartItem}
-        onClearCart={() => setCartItems([])}
+        onClearCart={() => {
+          setCartItems([]);
+          showAlert && showAlert("Sua sacola foi esvaziada.", "info");
+        }}
         onOpenPaymentModal={(total) => {
           if (!user) {
             setCartOpen(false);
             setAuthOpen(true);
-            setToastMessage("Faça login para finalizar a compra da receita!");
-            setTimeout(() => setToastMessage(""), 3500);
+            showAlert &&
+              showAlert("Faça login para finalizar a compra da receita!", "warning");
             return;
           }
           setPaymentTotal(total);

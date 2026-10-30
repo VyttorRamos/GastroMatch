@@ -1,22 +1,55 @@
 const bcrypt = require("bcryptjs");
 const prisma = require("../config/prisma");
 const { createToken } = require("../utils/jwt");
+const { isValidEmail, isValidCnpj } = require("../utils/validators");
 
-const publicUser = user => ({
-  id: user.id, name: user.name, email: user.email,
-  role: user.role, avatarUrl: user.avatarUrl, createdAt: user.createdAt,
-  chef: user.chef || null
-});
+const publicUser = (user) => {
+  const prefs =
+    user.profile?.preferences && typeof user.profile.preferences === "object"
+      ? user.profile.preferences
+      : {};
+  const chefData = user.chef
+    ? {
+        ...user.chef,
+        adminComment: user.chef.adminComment || prefs.adminComment || "",
+        hasPendencia: Boolean(user.chef.hasPendencia || prefs.hasPendencia)
+      }
+    : null;
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    avatarUrl: user.avatarUrl,
+    createdAt: user.createdAt,
+    chef: chefData
+  };
+};
 
 async function register(req, res) {
   try {
-    const { name, email, password, role = "USER" } = req.body;
+    const {
+      name,
+      email,
+      password,
+      role = "USER",
+      restaurant,
+      cnpj,
+      city,
+      docType = "Alvará Sanitário Vigente (Vigilância Municipal)",
+      fileUrl = "alvara-sanitario.pdf"
+    } = req.body;
     if (!name || !email || !password)
       return res.status(400).json({ message: "Nome, email e senha são obrigatórios." });
+    if (!isValidEmail(email))
+      return res.status(400).json({ message: "Informe um endereço de e-mail válido (ex: nome@dominio.com)." });
     if (password.length < 6)
       return res.status(400).json({ message: "A senha deve ter pelo menos 6 caracteres." });
     if (!["USER", "CHEF", "ADMIN"].includes(role))
-      return res.status(400).json({ message: "Tipo de usuário inválido." });
+      return res.status(400).json({ message: "Tipo de usuário inválido para criação de conta." });
+    if (role === "CHEF" && (!cnpj || !isValidCnpj(cnpj)))
+      return res.status(400).json({ message: "Informe um CNPJ válido com 14 dígitos (verificado pela Receita Federal)." });
 
     const normalizedEmail = email.trim().toLowerCase();
     const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
@@ -24,11 +57,48 @@ async function register(req, res) {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
-      data: { name: name.trim(), email: normalizedEmail, passwordHash, role, profile: { create: {} } }
+      data: {
+        name: name.trim(),
+        email: normalizedEmail,
+        passwordHash,
+        role,
+        profile: {
+          create: {
+            city: city || null
+          }
+        },
+        ...(role === "CHEF"
+          ? {
+              chef: {
+                create: {
+                  displayName: name.trim(),
+                  restaurant: (restaurant || `Restaurante ${name.trim()}`).trim(),
+                  cnpj: (cnpj || "14.289.102/0001-55").trim(),
+                  description: city ? `Localização: ${city}` : "Estabelecimento Gastronômico Parceiro",
+                  status: "PENDING",
+                  documents: {
+                    create: {
+                      type: docType,
+                      fileUrl: fileUrl || "alvara-sanitario.pdf"
+                    }
+                  }
+                }
+              }
+            }
+          : {})
+      },
+      include: {
+        chef: {
+          include: { documents: true }
+        }
+      }
     });
 
     res.status(201).json({
-      message: "Usuário criado com sucesso.",
+      message:
+        role === "CHEF"
+          ? "Conta de Chef criada! Envie seus documentos para liberação pelo Administrador."
+          : "Usuário criado com sucesso.",
       token: createToken(user),
       user: publicUser(user)
     });
@@ -46,7 +116,12 @@ async function login(req, res) {
 
     const user = await prisma.user.findUnique({
       where: { email: email.trim().toLowerCase() },
-      include: { chef: true }
+      include: {
+        profile: true,
+        chef: {
+          include: { documents: { orderBy: { createdAt: "desc" } } }
+        }
+      }
     });
 
     const isDemoAccount = user && user.email.endsWith("@gastromatch.com") && ["123456", "chef123", "admin123"].includes(password);

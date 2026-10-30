@@ -13,7 +13,7 @@ const DIETARY_OPTIONS = [
 ];
 
 export default function UserProfileModal({ onClose }) {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, showAlert } = useAuth();
   const [activeTab, setActiveTab] = useState("dados"); // dados, endereco, preferencias, seguranca
 
   // Form states
@@ -51,18 +51,20 @@ export default function UserProfileModal({ onClose }) {
 
     if (!file.type.startsWith("image/")) {
       setMessage({ type: "error", text: "Por favor, selecione um arquivo de imagem (PNG, JPG, WebP)." });
+      showAlert && showAlert("Por favor, selecione um arquivo de imagem (PNG, JPG, WebP).", "error");
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
       setMessage({ type: "error", text: "A foto selecionada ultrapassa 10MB." });
+      showAlert && showAlert("A foto selecionada ultrapassa o limite de 10MB.", "error");
       return;
     }
 
     const reader = new FileReader();
     reader.onload = (event) => {
       const img = new Image();
-      img.onload = () => {
+      img.onload = async () => {
         const canvas = document.createElement("canvas");
         const MAX_DIM = 400;
         let width = img.width;
@@ -87,7 +89,19 @@ export default function UserProfileModal({ onClose }) {
 
         const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
         setAvatarUrl(dataUrl);
-        setMessage({ type: "success", text: "Foto carregada com sucesso! Clique em 'Salvar' abaixo para confirmar." });
+        try {
+          await updateProfile({
+            name: name || user?.name,
+            avatarUrl: dataUrl,
+            phone,
+            city,
+            state
+          });
+        } catch {
+          // ignore
+        }
+        setMessage({ type: "success", text: "A imagem de perfil foi trocada com sucesso!" });
+        showAlert && showAlert("A imagem de perfil foi trocada com sucesso!", "success");
       };
       img.src = event.target.result;
     };
@@ -118,15 +132,24 @@ export default function UserProfileModal({ onClose }) {
   }, [user]);
 
   const handleToggleDietary = (item) => {
-    setDietary((prev) =>
-      prev.includes(item) ? prev.filter((d) => d !== item) : [...prev, item]
-    );
+    setDietary((prev) => {
+      const exists = prev.includes(item);
+      showAlert &&
+        showAlert(
+          exists
+            ? `Preferência "${item}" removida.`
+            : `Preferência "${item}" adicionada!`,
+          exists ? "info" : "success"
+        );
+      return exists ? prev.filter((d) => d !== item) : [...prev, item];
+    });
   };
 
   const handleSearchCep = async () => {
     const cleanCep = zipCode.replace(/\D/g, "");
     if (cleanCep.length !== 8) {
       setMessage({ type: "error", text: "Digite um CEP válido com 8 dígitos." });
+      showAlert && showAlert("Digite um CEP válido com 8 dígitos.", "error");
       return;
     }
 
@@ -138,15 +161,18 @@ export default function UserProfileModal({ onClose }) {
       const data = await res.json();
       if (data.erro) {
         setMessage({ type: "error", text: "CEP não encontrado. Preencha manualmente." });
+        showAlert && showAlert("CEP não encontrado. Preencha o endereço manualmente.", "warning");
       } else {
         setStreet(data.logradouro || "");
         setNeighborhood(data.bairro || "");
         setCity(data.localidade || "");
         setState(data.uf || "");
         setMessage({ type: "success", text: "Endereço localizado com sucesso!" });
+        showAlert && showAlert("Endereço localizado pelo CEP com sucesso!", "success");
       }
     } catch {
       setMessage({ type: "error", text: "Não foi possível consultar o CEP automaticamente." });
+      showAlert && showAlert("Não foi possível consultar o CEP automaticamente.", "error");
     } finally {
       setSearchingCep(false);
     }
@@ -159,14 +185,17 @@ export default function UserProfileModal({ onClose }) {
     if (newPassword) {
       if (newPassword.length < 6) {
         setMessage({ type: "error", text: "A nova senha deve ter no mínimo 6 dígitos." });
+        showAlert && showAlert("A nova senha deve ter no mínimo 6 dígitos.", "error");
         return;
       }
       if (newPassword !== confirmPassword) {
         setMessage({ type: "error", text: "A confirmação da nova senha não confere." });
+        showAlert && showAlert("A confirmação da nova senha não confere.", "error");
         return;
       }
       if (!currentPassword) {
         setMessage({ type: "error", text: "Informe a senha atual para confirmar a alteração." });
+        showAlert && showAlert("Informe a senha atual para confirmar a alteração.", "error");
         return;
       }
     }
@@ -198,12 +227,17 @@ export default function UserProfileModal({ onClose }) {
       };
 
       await updateProfile(payload);
-      setMessage({ type: "success", text: "Perfil e preferências atualizados com sucesso!" });
+      const msgText = newPassword
+        ? "Senha e dados do perfil atualizados com sucesso!"
+        : "Alterações do perfil salvas com sucesso!";
+      setMessage({ type: "success", text: msgText });
+      showAlert && showAlert(msgText, "success");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err) {
       setMessage({ type: "error", text: err.message || "Erro ao salvar perfil." });
+      showAlert && showAlert(err.message || "Erro ao salvar perfil.", "error");
     } finally {
       setLoading(false);
     }
@@ -361,9 +395,21 @@ export default function UserProfileModal({ onClose }) {
                       <button
                         type="button"
                         className="button button-outline button-small btn-remove-photo"
-                        onClick={() => {
+                        onClick={async () => {
                           setAvatarUrl("");
-                          setMessage({ type: "info", text: "Foto removida. Suas iniciais serão exibidas no perfil." });
+                          try {
+                            await updateProfile({
+                              name: name || user?.name,
+                              avatarUrl: "",
+                              phone,
+                              city,
+                              state
+                            });
+                          } catch {
+                            // ignore
+                          }
+                          setMessage({ type: "info", text: "A imagem de perfil foi removida." });
+                          showAlert && showAlert("A imagem de perfil foi removida.", "info");
                         }}
                       >
                         <Icon name="x" size={14} /> Remover Foto
@@ -523,7 +569,14 @@ export default function UserProfileModal({ onClose }) {
                         name="skillLevel"
                         value={lvl}
                         checked={skillLevel === lvl}
-                        onChange={(e) => setSkillLevel(e.target.value)}
+                        onChange={(e) => {
+                          setSkillLevel(e.target.value);
+                          showAlert &&
+                            showAlert(
+                              `Nível de experiência alterado para "${e.target.value}"!`,
+                              "info"
+                            );
+                        }}
                       />
                       <strong>{lvl}</strong>
                       <small>

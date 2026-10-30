@@ -1,8 +1,10 @@
 import { useState } from "react";
 import Icon from "./Icon";
+import { formatCnpj, isValidCnpj, generateValidCnpj } from "../utils/validators";
 
 export default function ChefPartnerModal({ onClose }) {
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     cnpj: "",
@@ -14,6 +16,11 @@ export default function ChefPartnerModal({ onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setError("");
+    if (!isValidCnpj(formData.cnpj)) {
+      setError("O CNPJ informado é inválido. Verifique os 14 dígitos verificadores.");
+      return;
+    }
     setSubmitted(true);
   };
 
@@ -33,6 +40,7 @@ export default function ChefPartnerModal({ onClose }) {
             </div>
 
             <form onSubmit={handleSubmit} className="partner-form">
+              {error && <div className="auth-error" style={{ marginBottom: 12 }}>{error}</div>}
               <div className="form-grid">
                 <div className="input-field">
                   <label>Nome Completo / Responsável Técnico</label>
@@ -46,14 +54,47 @@ export default function ChefPartnerModal({ onClose }) {
                 </div>
 
                 <div className="input-field">
-                  <label>CNPJ do Estabelecimento</label>
+                  <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>CNPJ do Estabelecimento</span>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, cnpj: generateValidCnpj() })}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        padding: 0,
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        color: "#ea580c",
+                        cursor: "pointer",
+                        textDecoration: "underline"
+                      }}
+                    >
+                      Gerar válido
+                    </button>
+                  </label>
                   <input
                     type="text"
                     required
+                    maxLength={18}
                     placeholder="00.000.000/0001-00"
                     value={formData.cnpj}
-                    onChange={(e) => setFormData({ ...formData, cnpj: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, cnpj: formatCnpj(e.target.value) })}
                   />
+                  {formData.cnpj.replace(/\D/g, "").length > 0 && (
+                    <small
+                      style={{
+                        fontSize: "11.5px",
+                        fontWeight: 600,
+                        color: isValidCnpj(formData.cnpj) ? "#15803d" : "#dc2626",
+                        marginTop: 2
+                      }}
+                    >
+                      {isValidCnpj(formData.cnpj)
+                        ? "✓ CNPJ válido"
+                        : "✗ CNPJ inválido"}
+                    </small>
+                  )}
                 </div>
 
                 <div className="input-field">

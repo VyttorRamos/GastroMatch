@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import Icon from "./Icon";
 import { api } from "../services/api";
-import { useAuth } from "../services/AuthContext";
+import {
+  useAuth,
+  getLocalChefAppByEmail,
+  upsertLocalChefApplication
+} from "../services/AuthContext";
+import { formatCnpj, isValidCnpj, generateValidCnpj, isValidEmail } from "../utils/validators";
 
 function formatPrice(val) {
   if (val === undefined || val === null) return "0,00";
@@ -9,8 +14,57 @@ function formatPrice(val) {
 }
 
 export default function ChefDashboardPage({ onBackToStore, onRecipeCreated, onOpenAdminDashboard }) {
-  const { user, logout, login } = useAuth();
-  const isChefOrAdmin = Boolean(user && (user.role === "CHEF" || user.role === "ADMIN" || Boolean(user.chef)));
+  const { user, setUser, logout, login, showAlert } = useAuth();
+  const [localAppState, setLocalAppState] = useState(() =>
+    user?.email ? getLocalChefAppByEmail(user.email) : null
+  );
+
+  useEffect(() => {
+    if (user?.email) {
+      setLocalAppState(getLocalChefAppByEmail(user.email));
+    } else {
+      setLocalAppState(null);
+    }
+  }, [user]);
+
+  const effectiveChefStatus = localAppState?.updatedAt
+    ? localAppState.status
+    : user?.chef?.status || localAppState?.status || "PENDING";
+
+  const isLoggedChef = Boolean(
+    user && (user.role === "CHEF" || Boolean(user.chef) || Boolean(localAppState))
+  );
+
+  const isChefOrAdmin = Boolean(
+    user &&
+      (user.role === "ADMIN" || (isLoggedChef && effectiveChefStatus === "APPROVED"))
+  );
+
+  // Document submission state for logged-in pending Chef
+  const [docUploadForm, setDocUploadForm] = useState({
+    restaurant: "",
+    cnpj: "",
+    city: "",
+    docType: "Alvará Sanitário Vigente (Vigilância Municipal)",
+    fileUrl: "",
+    fileName: "",
+    chefNote: ""
+  });
+  const [docSending, setDocSending] = useState(false);
+  const [docSuccessMsg, setDocSuccessMsg] = useState("");
+  const [docErrorMsg, setDocErrorMsg] = useState("");
+
+  useEffect(() => {
+    if (isLoggedChef) {
+      const app = user?.email ? getLocalChefAppByEmail(user.email) : null;
+      setDocUploadForm((prev) => ({
+        ...prev,
+        restaurant: app?.restaurant || user?.chef?.restaurant || prev.restaurant || "",
+        cnpj: app?.cnpj || user?.chef?.cnpj || prev.cnpj || "",
+        city: app?.user?.profile?.city || app?.city || prev.city || "Florianópolis - SC"
+      }));
+    }
+  }, [isLoggedChef, user]);
 
   const [activeTab, setActiveTab] = useState("recipes"); // recipes, new, orders, metrics
   const [recipes, setRecipes] = useState([]);
@@ -31,6 +85,7 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated, onOp
   const [regForm, setRegForm] = useState({
     name: "",
     email: "",
+    password: "",
     cnpj: "",
     restaurant: "",
     city: "",
@@ -99,16 +154,19 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated, onOp
   function handleAddIngredient(e) {
     e.preventDefault();
     if (!newIngName.trim()) return;
+    const addedName = newIngName.trim();
     setIngredientsList((prev) => [
       ...prev,
-      { name: newIngName.trim(), quantity: newIngQty.trim() || "a gosto" }
+      { name: addedName, quantity: newIngQty.trim() || "a gosto" }
     ]);
     setNewIngName("");
     setNewIngQty("");
+    showAlert && showAlert(`Ingrediente "${addedName}" adicionado à ficha técnica!`, "success");
   }
 
   function handleRemoveIngredient(index) {
     setIngredientsList((prev) => prev.filter((_, idx) => idx !== index));
+    showAlert && showAlert("Ingrediente removido da ficha técnica.", "info");
   }
 
   function handleStartEdit(recipe) {
@@ -195,9 +253,11 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated, onOp
       if (editingRecipeId) {
         await api.updateRecipe(editingRecipeId, payload);
         setFeedbackMsg("Receita e Kit atualizados com sucesso no catálogo!");
+        showAlert && showAlert("Receita e Kit atualizados com sucesso!", "success");
       } else {
         await api.createRecipe(payload);
         setFeedbackMsg("Receita e Kit de Ingredientes publicados com sucesso no catálogo!");
+        showAlert && showAlert("Nova receita publicada com sucesso no catálogo!", "success");
       }
 
       setEditingRecipeId(null);
@@ -237,8 +297,9 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated, onOp
       await api.deleteRecipe(id);
       setRecipes((prev) => prev.filter((r) => r.id !== id));
       if (onRecipeCreated) onRecipeCreated();
+      showAlert && showAlert("Receita removida do catálogo com sucesso.", "info");
     } catch (err) {
-      alert("Erro ao excluir receita: " + err.message);
+      showAlert && showAlert("Erro ao excluir receita: " + err.message, "error");
     }
   }
 
@@ -257,9 +318,13 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated, onOp
   async function handleChefLogin(e) {
     e.preventDefault();
     setLoginError("");
+    if (!isValidEmail(loginEmail)) {
+      setLoginError("Informe um endereço de e-mail válido.");
+      return;
+    }
     setLoginLoading(true);
     try {
-      await login(loginEmail, loginPassword);
+      await login(loginEmail.trim(), loginPassword);
     } catch (err) {
       setLoginError(err.message || "E-mail ou senha incorretos.");
     } finally {
@@ -283,9 +348,23 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated, onOp
 
   async function handleChefRegister(e) {
     e.preventDefault();
+    setLoginError("");
+
+    if (!isValidEmail(regForm.email)) {
+      setLoginError("Por favor, informe um e-mail válido (ex: chef@restaurante.com.br).");
+      return;
+    }
+
+    if (!isValidCnpj(regForm.cnpj)) {
+      setLoginError("O CNPJ informado é inválido. Verifique os 14 dígitos verificadores.");
+      return;
+    }
+
     const docFileUrl =
       regForm.fileUrl ||
       `alvara_${(regForm.restaurant || "restaurante").toLowerCase().replace(/[^a-z0-9]/g, "_")}.pdf`;
+
+    const normalizedEmail = regForm.email.trim().toLowerCase();
 
     const newEntry = {
       id: Date.now(),
@@ -294,12 +373,11 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated, onOp
       cnpj: regForm.cnpj,
       description: `Localização: ${regForm.city || "Brasil"}`,
       status: "PENDING",
+      password: regForm.password || "123456",
       createdAt: new Date().toISOString(),
       user: {
         name: regForm.name,
-        email:
-          regForm.email ||
-          `${regForm.name.toLowerCase().replace(/[^a-z0-9]/g, "")}@restaurante.com.br`,
+        email: normalizedEmail,
         profile: { city: regForm.city }
       },
       documents: [
@@ -317,7 +395,8 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated, onOp
     try {
       const res = await api.submitChefApplication({
         name: regForm.name,
-        email: newEntry.user.email,
+        email: normalizedEmail,
+        password: regForm.password || "123456",
         restaurant: regForm.restaurant,
         cnpj: regForm.cnpj,
         city: regForm.city,
@@ -333,15 +412,477 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated, onOp
 
     try {
       const existing = JSON.parse(localStorage.getItem("gastromatch_chef_applications") || "[]");
+      const filtered = (Array.isArray(existing) ? existing : []).filter(
+        (item) => (item.user?.email || "").trim().toLowerCase() !== normalizedEmail
+      );
       localStorage.setItem(
         "gastromatch_chef_applications",
-        JSON.stringify([newEntry, ...existing])
+        JSON.stringify([newEntry, ...filtered])
       );
     } catch {
       // ignore
     }
 
     setRegSubmitted(true);
+  }
+
+  function handleLoggedChefFileChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setDocUploadForm((prev) => ({
+        ...prev,
+        fileName: file.name,
+        fileUrl: typeof reader.result === "string" ? reader.result : file.name
+      }));
+      showAlert && showAlert(`Arquivo "${file.name}" selecionado com sucesso!`, "info");
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function handleLoggedChefSendDocument(e) {
+    e.preventDefault();
+    setDocErrorMsg("");
+    setDocSuccessMsg("");
+
+    if (!docUploadForm.restaurant.trim() || !docUploadForm.cnpj.trim()) {
+      setDocErrorMsg("Informe o nome do restaurante e o CNPJ do estabelecimento.");
+      return;
+    }
+
+    if (!isValidCnpj(docUploadForm.cnpj)) {
+      setDocErrorMsg("O CNPJ informado é inválido. Verifique os 14 dígitos verificadores.");
+      return;
+    }
+
+    setDocSending(true);
+    const generatedFileUrl =
+      docUploadForm.fileUrl ||
+      `documento_${(docUploadForm.restaurant || "chef").toLowerCase().replace(/[^a-z0-9]/g, "_")}_${Date.now()}.pdf`;
+
+    const newDocItem = {
+      id: Date.now(),
+      type: docUploadForm.docType,
+      fileUrl: generatedFileUrl,
+      fileName: docUploadForm.fileName || generatedFileUrl,
+      chefNote: docUploadForm.chefNote.trim(),
+      createdAt: new Date().toISOString()
+    };
+
+    const existingApp = user?.email ? getLocalChefAppByEmail(user.email) : null;
+    const prevDocs =
+      existingApp?.documents || user?.chef?.documents || [];
+
+    let chefId = existingApp?.id || user?.chef?.id || Date.now();
+
+    try {
+      const res = await api.submitChefApplication({
+        name: user.name,
+        email: user.email,
+        restaurant: docUploadForm.restaurant.trim(),
+        cnpj: docUploadForm.cnpj.trim(),
+        city: docUploadForm.city.trim(),
+        docType: docUploadForm.docType,
+        fileUrl: generatedFileUrl
+      });
+      if (res?.chef?.id) {
+        chefId = res.chef.id;
+      }
+    } catch {
+      // Fallback para persistência local
+    }
+
+    const updatedApp = {
+      ...(existingApp || {}),
+      id: chefId,
+      displayName: user.name || existingApp?.displayName || "Chef Parceiro",
+      restaurant: docUploadForm.restaurant.trim(),
+      cnpj: docUploadForm.cnpj.trim(),
+      city: docUploadForm.city.trim(),
+      description: `Localização: ${docUploadForm.city.trim() || "Brasil"}${
+        docUploadForm.chefNote.trim() ? ` • Obs do Chef: ${docUploadForm.chefNote.trim()}` : ""
+      }`,
+      status: "PENDING",
+      hasPendencia: false,
+      adminComment: existingApp?.adminComment || "",
+      createdAt: existingApp?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        profile: { city: docUploadForm.city.trim() }
+      },
+      documents: [newDocItem, ...prevDocs],
+      _count: { recipes: 0 }
+    };
+
+    upsertLocalChefApplication(updatedApp);
+    setLocalAppState(updatedApp);
+
+    const updatedUser = {
+      ...user,
+      role: "CHEF",
+      chef: updatedApp
+    };
+    setUser(updatedUser);
+    localStorage.setItem("gastromatch_user", JSON.stringify(updatedUser));
+
+    setDocUploadForm((prev) => ({
+      ...prev,
+      fileUrl: "",
+      fileName: "",
+      chefNote: ""
+    }));
+    setDocSending(false);
+    setDocSuccessMsg(
+      "Documento enviado com sucesso para o Administrador! Acompanhe o status abaixo."
+    );
+    showAlert &&
+      showAlert("Documento enviado para análise do Administrador com sucesso!", "success");
+  }
+
+  // TELA DE ENVIO DE DOCUMENTOS & HOMOLOGAÇÃO (QUANDO O NOVO CHEF ENTRA E AINDA NÃO FOI LIBERADO PELO ADMIN)
+  if (isLoggedChef && !isChefOrAdmin) {
+    const currentApp = localAppState || user?.chef || {};
+    const sentDocs = Array.isArray(currentApp.documents) ? currentApp.documents : [];
+    const adminComment = currentApp.adminComment || "";
+    const hasPendencia = Boolean(currentApp.hasPendencia || adminComment);
+
+    return (
+      <div className="chef-page-layout">
+        <header className="chef-page-navbar">
+          <div className="container chef-navbar-inner">
+            <div className="chef-navbar-brand-row">
+              <button className="back-store-button" onClick={onBackToStore}>
+                <Icon name="arrowLeft" size={17} /> <span>Voltar à Vitrine</span>
+              </button>
+              <div className="brand-divider"></div>
+              <div className="chef-brand-identity">
+                <img className="brand-mark-mini" src="/gastromatch-icon.png" alt="GastroMatch" />
+                <div className="chef-brand-text-col">
+                  <span className="chef-page-portal-title">Homologação do Novo Chef</span>
+                  <span className="chef-page-portal-sub">Envio de Documentos & Liberação pelo Administrador</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="chef-navbar-user-controls">
+              <div className="chef-header-profile-tag">
+                <div className="chef-avatar-small">
+                  <Icon name="chef" size={16} />
+                </div>
+                <div className="chef-header-texts">
+                  <strong>{user.name}</strong>
+                  <span>
+                    {effectiveChefStatus === "REJECTED"
+                      ? "Documentação Recusada"
+                      : hasPendencia
+                      ? "Com Pendência do Admin"
+                      : "Aguardando Liberação"}
+                  </span>
+                </div>
+              </div>
+
+              {onOpenAdminDashboard && (
+                <button
+                  type="button"
+                  className="button button-small button-outline"
+                  onClick={onOpenAdminDashboard}
+                >
+                  <Icon name="shieldCheck" size={14} /> <span>Painel Admin</span>
+                </button>
+              )}
+
+              <button
+                className="button button-small button-outline chef-exit-btn"
+                onClick={logout}
+                title="Sair da conta"
+              >
+                <Icon name="x" size={14} /> <span>Sair</span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main className="chef-page-main">
+          <div className="container chef-access-max">
+            {/* Banner de Status da Homologação */}
+            <div className="chef-access-hero-card">
+              <span className="chef-badge-pill-light live">
+                <span className="live-dot"></span>{" "}
+                {effectiveChefStatus === "REJECTED"
+                  ? "Status: Cadastro Recusado • Reenvie a Documentação"
+                  : hasPendencia
+                  ? "Status: Pendência Apontada pelo Administrador"
+                  : sentDocs.length > 0
+                  ? "Status: Documentos Enviados • Aguardando Liberação do Admin"
+                  : "Status: Pendente • Envie seus Documentos Abaixo"}
+              </span>
+              <h1>Olá, {user.name}! Envie seus documentos para liberação</h1>
+              <p>
+                Para garantir a segurança alimentar dos clientes, novos chefs precisam enviar a documentação
+                sanitária e o CNPJ do restaurante. Assim que o <strong>Administrador</strong> conferir seus
+                documentos e liberar seu cadastro, seu painel completo de publicação de receitas e venda de kits será desbloqueado!
+              </p>
+            </div>
+
+            {/* Alerta de Comentário / Pendência do Administrador */}
+            {adminComment && (
+              <div
+                style={{
+                  background: effectiveChefStatus === "REJECTED" ? "#fef2f2" : "#fffbeb",
+                  border: `2px solid ${effectiveChefStatus === "REJECTED" ? "#ef4444" : "#f59e0b"}`,
+                  borderRadius: "16px",
+                  padding: "20px 24px",
+                  marginBottom: "24px",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.05)"
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                  <Icon name="shieldCheck" size={22} />
+                  <strong style={{ fontSize: "16px", color: effectiveChefStatus === "REJECTED" ? "#991b1b" : "#92400e" }}>
+                    {effectiveChefStatus === "REJECTED"
+                      ? "Motivo da Recusa / Parecer do Administrador:"
+                      : "Comentário / Pendência Registrada pelo Administrador:"}
+                  </strong>
+                </div>
+                <p style={{ margin: "0 0 10px", fontSize: "14.5px", color: "#1e293b", lineHeight: 1.55, fontWeight: 500 }}>
+                  &ldquo;{adminComment}&rdquo;
+                </p>
+                <span style={{ fontSize: "12.5px", color: "#64748b" }}>
+                  Utilize o formulário abaixo para enviar o documento complementar ou corrigir a pendência solicitada pelo Admin.
+                </span>
+              </div>
+            )}
+
+            {/* Card Principal de Envio de Documentos */}
+            <div className="chef-access-body-card" style={{ marginBottom: "24px" }}>
+              <div style={{ marginBottom: "20px" }}>
+                <span className="section-kicker">Etapa Obrigatória de Credenciamento</span>
+                <h2 style={{ margin: "4px 0 6px", fontSize: "22px" }}>Enviar Documentos para o Administrador</h2>
+                <p style={{ margin: 0, color: "#64748b", fontSize: "14px" }}>
+                  Anexe seu Alvará Sanitário, Cartão CNPJ ou Certificado de Boas Práticas (ANVISA). Você pode enviar mais de um documento se necessário.
+                </p>
+              </div>
+
+              {docErrorMsg && <div className="page-alert error">{docErrorMsg}</div>}
+              {docSuccessMsg && (
+                <div className="page-alert success" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <Icon name="check" size={18} />
+                  <span>{docSuccessMsg}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleLoggedChefSendDocument} className="chef-screen-form">
+                <div className="form-grid-2">
+                  <div className="form-field">
+                    <span>Nome Fantasia do Restaurante *</span>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Trattoria del Chef"
+                      value={docUploadForm.restaurant}
+                      onChange={(e) =>
+                        setDocUploadForm({ ...docUploadForm, restaurant: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="form-field">
+                    <span style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                      <span>CNPJ do Estabelecimento *</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setDocUploadForm({ ...docUploadForm, cnpj: generateValidCnpj() })
+                        }
+                        style={{
+                          background: "none",
+                          border: "none",
+                          padding: 0,
+                          fontSize: "11.5px",
+                          fontWeight: 700,
+                          color: "#ea580c",
+                          cursor: "pointer",
+                          textDecoration: "underline"
+                        }}
+                      >
+                        Gerar CNPJ válido
+                      </button>
+                    </span>
+                    <input
+                      type="text"
+                      required
+                      maxLength={18}
+                      placeholder="00.000.000/0001-00"
+                      value={docUploadForm.cnpj}
+                      onChange={(e) =>
+                        setDocUploadForm({ ...docUploadForm, cnpj: formatCnpj(e.target.value) })
+                      }
+                    />
+                    {docUploadForm.cnpj.replace(/\D/g, "").length > 0 && (
+                      <small
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          color: isValidCnpj(docUploadForm.cnpj) ? "#15803d" : "#dc2626",
+                          marginTop: "4px",
+                          display: "block"
+                        }}
+                      >
+                        {isValidCnpj(docUploadForm.cnpj)
+                          ? "✓ CNPJ válido verificado"
+                          : docUploadForm.cnpj.replace(/\D/g, "").length < 14
+                          ? `Digite os 14 dígitos (${docUploadForm.cnpj.replace(/\D/g, "").length}/14)`
+                          : "✗ CNPJ inválido (dígitos verificadores incorretos)"}
+                      </small>
+                    )}
+                  </div>
+                </div>
+
+                <div className="form-grid-2">
+                  <div className="form-field">
+                    <span>Cidade e Estado *</span>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Florianópolis - SC"
+                      value={docUploadForm.city}
+                      onChange={(e) =>
+                        setDocUploadForm({ ...docUploadForm, city: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="form-field">
+                    <span>Tipo de Documento *</span>
+                    <select
+                      value={docUploadForm.docType}
+                      onChange={(e) =>
+                        setDocUploadForm({ ...docUploadForm, docType: e.target.value })
+                      }
+                    >
+                      <option>Alvará Sanitário Vigente (Vigilância Municipal)</option>
+                      <option>Comprovante de Inscrição e Situação Cadastral (CNPJ)</option>
+                      <option>Licença da Vigilância Sanitária Municipal</option>
+                      <option>Certificado de Boas Práticas de Manipulação de Alimentos (ANVISA)</option>
+                      <option>Documento de Identificação do Responsável Técnico (RG/CNH)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-upload-area">
+                  <Icon name="fileText" size={26} />
+                  <div className="upload-texts">
+                    <strong>Selecionar Arquivo do Documento (PDF, JPG ou PNG) *</strong>
+                    <p>
+                      {docUploadForm.fileName
+                        ? `✓ Arquivo selecionado: ${docUploadForm.fileName}`
+                        : "Clique aqui para anexar o documento digitalizado para análise do Admin"}
+                    </p>
+                  </div>
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={handleLoggedChefFileChange}
+                  />
+                </div>
+
+                <div className="form-field">
+                  <span>Observação / Mensagem para o Administrador (Opcional)</span>
+                  <input
+                    type="text"
+                    placeholder="Ex: Segue alvará sanitário atualizado conforme solicitado..."
+                    value={docUploadForm.chefNote}
+                    onChange={(e) =>
+                      setDocUploadForm({ ...docUploadForm, chefNote: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="form-submit-row">
+                  <button
+                    type="submit"
+                    disabled={docSending}
+                    className="button button-orange button-large button-full"
+                  >
+                    <Icon name="fileText" size={17} />{" "}
+                    {docSending
+                      ? "Enviando Documento..."
+                      : "Enviar Documento para Análise do Administrador"}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Lista de Documentos Já Enviados pelo Chef */}
+            <div className="chef-access-body-card">
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "18px" }}>
+                    Documentos Enviados por Você ({sentDocs.length})
+                  </h3>
+                  <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#64748b" }}>
+                    Todos os arquivos abaixo já estão visíveis para o Administrador avaliar no Painel Admin.
+                  </p>
+                </div>
+                {onOpenAdminDashboard && (
+                  <button
+                    type="button"
+                    className="button button-small button-outline"
+                    onClick={onOpenAdminDashboard}
+                  >
+                    <Icon name="shieldCheck" size={15} /> Abrir Painel do Admin para Avaliar
+                  </button>
+                )}
+              </div>
+
+              {sentDocs.length === 0 ? (
+                <div className="empty-state" style={{ margin: "10px auto", padding: "32px 20px" }}>
+                  <div className="empty-state-icon-badge">
+                    <Icon name="fileText" size={26} />
+                  </div>
+                  <h3>Nenhum documento enviado ainda</h3>
+                  <p>
+                    Preencha o formulário acima e anexe seu documento sanitário para que o Administrador possa analisar e liberar seu acesso.
+                  </p>
+                </div>
+              ) : (
+                <div className="admin-docs-grid">
+                  {sentDocs.map((doc, idx) => (
+                    <div key={doc.id || idx} className="admin-doc-item">
+                      <div className="admin-doc-info">
+                        <Icon name="fileText" size={18} />
+                        <div>
+                          <strong>{doc.type}</strong>
+                          <span>
+                            Arquivo:{" "}
+                            {doc.fileUrl?.startsWith("data:")
+                              ? doc.fileName || "documento_digitalizado_anexo"
+                              : doc.fileName || doc.fileUrl}
+                          </span>
+                          {doc.chefNote && (
+                            <span style={{ display: "block", color: "#b45309", marginTop: 2 }}>
+                              Nota enviada: &ldquo;{doc.chefNote}&rdquo;
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span className="admin-status-badge pending" style={{ fontSize: 11 }}>
+                        Enviado em{" "}
+                        {doc.createdAt
+                          ? new Date(doc.createdAt).toLocaleDateString("pt-BR")
+                          : "Hoje"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   // TELA DEDICADA DE ACESSO / CREDENCIAMENTO DO CHEF (QUANDO NÃO AUTENTICADO)
@@ -458,13 +999,88 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated, onOp
                       />
                     </div>
                     <div className="form-field">
-                      <span>CNPJ do Estabelecimento *</span>
+                      <span style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                        <span>CNPJ do Estabelecimento *</span>
+                        <button
+                          type="button"
+                          onClick={() => setRegForm({ ...regForm, cnpj: generateValidCnpj() })}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            padding: 0,
+                            fontSize: "11.5px",
+                            fontWeight: 700,
+                            color: "#ea580c",
+                            cursor: "pointer",
+                            textDecoration: "underline"
+                          }}
+                        >
+                          Gerar CNPJ válido
+                        </button>
+                      </span>
                       <input
                         type="text"
                         required
+                        maxLength={18}
                         placeholder="00.000.000/0001-00"
                         value={regForm.cnpj}
-                        onChange={(e) => setRegForm({ ...regForm, cnpj: e.target.value })}
+                        onChange={(e) => setRegForm({ ...regForm, cnpj: formatCnpj(e.target.value) })}
+                      />
+                      {regForm.cnpj.replace(/\D/g, "").length > 0 && (
+                        <small
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            color: isValidCnpj(regForm.cnpj) ? "#15803d" : "#dc2626",
+                            marginTop: "4px",
+                            display: "block"
+                          }}
+                        >
+                          {isValidCnpj(regForm.cnpj)
+                            ? "✓ CNPJ válido verificado"
+                            : regForm.cnpj.replace(/\D/g, "").length < 14
+                            ? `Digite os 14 dígitos (${regForm.cnpj.replace(/\D/g, "").length}/14)`
+                            : "✗ CNPJ inválido (dígitos verificadores incorretos)"}
+                        </small>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="form-grid-2">
+                    <div className="form-field">
+                      <span>E-mail de Acesso do Chef *</span>
+                      <input
+                        type="email"
+                        required
+                        placeholder="Ex: chef@restaurante.com"
+                        value={regForm.email}
+                        onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
+                      />
+                      {regForm.email.trim().length > 0 && (
+                        <small
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            color: isValidEmail(regForm.email) ? "#15803d" : "#dc2626",
+                            marginTop: "4px",
+                            display: "block"
+                          }}
+                        >
+                          {isValidEmail(regForm.email)
+                            ? "✓ Formato de e-mail válido"
+                            : "✗ Informe um e-mail válido (ex: chef@restaurante.com)"}
+                        </small>
+                      )}
+                    </div>
+                    <div className="form-field">
+                      <span>Senha de Acesso (mín. 6 dígitos) *</span>
+                      <input
+                        type="password"
+                        minLength={6}
+                        required
+                        placeholder="••••••••"
+                        value={regForm.password}
+                        onChange={(e) => setRegForm({ ...regForm, password: e.target.value })}
                       />
                     </div>
                   </div>
@@ -545,7 +1161,10 @@ export default function ChefDashboardPage({ onBackToStore, onRecipeCreated, onOp
                   <h3>Credenciais e Documentos Enviados com Sucesso!</h3>
                   <p>
                     A solicitação do estabelecimento <strong>{regForm.restaurant || "seu restaurante"}</strong> e o documento{" "}
-                    <strong>{regForm.docType}</strong> foram encaminhados para o <strong>Painel do Administrador</strong>.
+                    <strong>{regForm.docType}</strong> foram encaminhados para o <strong>Painel do Administrador</strong> com status <strong>PENDENTE</strong>.
+                  </p>
+                  <p style={{ fontSize: 13, color: "#92400e", background: "#fffbeb", border: "1px solid #f59e0b", padding: "10px 14px", borderRadius: 10, maxWidth: 520, margin: "8px auto" }}>
+                    ⏳ <strong>Atenção:</strong> Seu login como Chef só será liberado após o Administrador aceitar seu cadastro no Painel do Administrador.
                   </p>
                   <div className="reg-success-cta-box" style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
                     <span>Você pode abrir o Painel do Administrador agora para aprovar este cadastro:</span>

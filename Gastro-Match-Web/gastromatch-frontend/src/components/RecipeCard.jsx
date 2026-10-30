@@ -28,8 +28,11 @@ export default function RecipeCard({
   onToggleFavorite,
   isPurchased = false
 }) {
-  const rating = recipe.rating ?? "4.9";
-  const reviews = recipe.reviews ?? recipe._count?.reviews ?? 12;
+  const rating = recipe.rating ?? "5.0";
+  const reviews =
+    recipe.reviewsCount ??
+    recipe._count?.reviews ??
+    (Array.isArray(recipe.reviews) ? recipe.reviews.length : recipe.reviews ?? 0);
   const time = recipe.time ?? `${recipe.prepTime ?? 40} min`;
   const difficultyMap = { EASY: "Fácil", MEDIUM: "Médio", HARD: "Difícil" };
   const difficulty = difficultyMap[recipe.difficulty] || recipe.difficulty || "Médio";
