@@ -1,17 +1,19 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Image } from 'expo-image';
+import { useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { RecipeCard, screenStyles as s } from '../../components/recipe-card';
 import { recipeService, Recipe } from '../../services/api';
 import { useAuth } from '../../services/auth-context';
+import { useFavorites } from '../../services/favorites-context';
 import { colors } from '../../constants/theme';
 
 export default function HomeScreen() {
   const { user } = useAuth();
+  const { isFavorite, refreshFavorites, toggleFavorite } = useFavorites();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [favorites, setFavorites] = useState<number[]>([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('Todas');
   const [loading, setLoading] = useState(true);
@@ -24,8 +26,6 @@ export default function HomeScreen() {
     try {
       const list = await recipeService.list(term);
       setRecipes(list);
-      const saved = await recipeService.favorites().catch(() => []);
-      setFavorites(saved.map(item => item.recipe.id));
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : 'Não foi possível carregar as receitas.');
     } finally {
@@ -34,27 +34,23 @@ export default function HomeScreen() {
     }
   }, [search]);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     const timer = setTimeout(() => load(search), 250);
+    refreshFavorites().catch(() => {});
     return () => clearTimeout(timer);
-  }, [search, load]);
+  }, [search, load, refreshFavorites]));
 
   const categories = useMemo(() => ['Todas', ...new Set(recipes.map(item => item.category?.name).filter((name): name is string => Boolean(name)))], [recipes]);
   const visibleRecipes = category === 'Todas' ? recipes : recipes.filter(item => item.category?.name === category);
   const firstName = user?.name?.trim().split(/\s+/)[0] || 'pessoa cozinheira';
 
-  async function toggle(id: number) {
-    const wasFavorite = favorites.includes(id);
-    setFavorites(current => wasFavorite ? current.filter(item => item !== id) : [...current, id]);
-    try { await recipeService.toggleFavorite(id); }
-    catch (error) {
-      setFavorites(current => wasFavorite ? [...current, id] : current.filter(item => item !== id));
-      Alert.alert('Não foi possível salvar', error instanceof Error ? error.message : 'Tente novamente.');
-    }
+  async function toggle(recipe: Recipe) {
+    try { await toggleFavorite(recipe); }
+    catch (error) { Alert.alert('Não foi possível salvar', error instanceof Error ? error.message : 'Tente novamente.'); }
   }
 
   return <SafeAreaView style={s.page} edges={['top', 'left', 'right']}>
-    <ScrollView contentContainerStyle={s.scroll} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor="#bc1909" />}>
+    <ScrollView contentContainerStyle={s.scroll} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); refreshFavorites().catch(() => {}).finally(() => setRefreshing(false)); }} tintColor="#bc1909" />}>
       <View style={s.header}>
         <View><Image source={require('../../assets/images/gastromatch-logo.png')} style={styles.brandLogo} resizeMode="contain" accessibilityLabel="GastroMatch" /><Text style={s.caption}>Um prato cheio de boas ideias</Text></View>
         <View style={styles.avatar}>
@@ -80,7 +76,7 @@ export default function HomeScreen() {
       </ScrollView>}
 
       <View style={styles.sectionHeading}><Text style={s.section}>{search ? 'Resultados da busca' : 'Receitas para você'}</Text>{!loading && recipes.length > 0 ? <Text style={styles.recipeCount}>{visibleRecipes.length}</Text> : null}</View>
-      {loading ? <ActivityIndicator style={{ marginTop: 30 }} color="#bc1909" /> : loadError ? <View style={s.empty}><Ionicons name="cloud-offline-outline" size={32} color="#bc1909" /><Text style={s.emptyTitle}>Não conseguimos carregar</Text><Text style={s.emptyText}>{loadError}</Text><Pressable style={s.button} onPress={() => { setLoading(true); load(); }}><Text style={s.buttonText}>Tentar novamente</Text></Pressable></View> : visibleRecipes.length ? visibleRecipes.map(recipe => <View key={recipe.id} style={{ marginBottom: 16 }}><RecipeCard recipe={recipe} favorite={favorites.includes(recipe.id)} onFavorite={() => toggle(recipe.id)} /></View>) : <View style={s.empty}><Text style={{ fontSize: 32 }}>{search || category !== 'Todas' ? '🔎' : '🥣'}</Text><Text style={s.emptyTitle}>{search || category !== 'Todas' ? 'Nenhuma receita encontrada' : 'Estamos preparando o cardápio'}</Text><Text style={s.emptyText}>{search || category !== 'Todas' ? 'Tente outro termo ou escolha uma categoria diferente.' : 'As receitas publicadas pelos chefs no site aparecem aqui. Puxe a tela para baixo para atualizar.'}</Text>{category !== 'Todas' ? <Pressable style={s.button} onPress={() => setCategory('Todas')}><Text style={s.buttonText}>Ver todas as categorias</Text></Pressable> : null}</View>}
+      {loading ? <ActivityIndicator style={{ marginTop: 30 }} color="#bc1909" /> : loadError ? <View style={s.empty}><Ionicons name="cloud-offline-outline" size={32} color="#bc1909" /><Text style={s.emptyTitle}>Não conseguimos carregar</Text><Text style={s.emptyText}>{loadError}</Text><Pressable style={s.button} onPress={() => { setLoading(true); load(); }}><Text style={s.buttonText}>Tentar novamente</Text></Pressable></View> : visibleRecipes.length ? visibleRecipes.map(recipe => <View key={recipe.id} style={{ marginBottom: 16 }}><RecipeCard recipe={recipe} favorite={isFavorite(recipe.id)} onFavorite={() => toggle(recipe)} /></View>) : <View style={s.empty}><Text style={{ fontSize: 32 }}>{search || category !== 'Todas' ? '🔎' : '🥣'}</Text><Text style={s.emptyTitle}>{search || category !== 'Todas' ? 'Nenhuma receita encontrada' : 'Estamos preparando o cardápio'}</Text><Text style={s.emptyText}>{search || category !== 'Todas' ? 'Tente outro termo ou escolha uma categoria diferente.' : 'As receitas publicadas pelos chefs no site aparecem aqui. Puxe a tela para baixo para atualizar.'}</Text>{category !== 'Todas' ? <Pressable style={s.button} onPress={() => setCategory('Todas')}><Text style={s.buttonText}>Ver todas as categorias</Text></Pressable> : null}</View>}
     </ScrollView>
   </SafeAreaView>;
 }

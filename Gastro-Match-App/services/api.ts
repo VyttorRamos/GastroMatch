@@ -49,12 +49,17 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export type User = { id: number; name: string; email: string; role?: string; avatarUrl?: string | null };
 export type Recipe = {
-  id: number; title: string; description: string; instructions?: string; imageUrl?: string | null;
+  id: number; authorId?: number; title: string; description: string; instructions?: string; imageUrl?: string | null;
   videoUrl?: string | null; price: number | string; prepTime: number; servings: number;
   difficulty: 'EASY' | 'MEDIUM' | 'HARD'; category?: { name: string } | null;
   chef?: { displayName?: string; restaurant?: string | null } | null;
   ingredients?: { quantity: string; ingredient: { name: string } }[];
   _count?: { reviews?: number; favorites?: number };
+};
+export type Order = {
+  id: number;
+  status: 'PENDING' | 'PAID' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELED';
+  items: { recipeId: number }[];
 };
 type LoginResponse = { token: string; user: User };
 type Favorite = { id: number; recipe: Recipe };
@@ -76,4 +81,8 @@ export const recipeService = {
   get: (id: number) => request<Recipe>(`/recipes/${id}`),
   favorites: () => request<Favorite[]>('/favorites'),
   toggleFavorite: (id: number) => request<{ favorite: boolean }>(`/favorites/${id}`, { method: 'POST' }),
+};
+
+export const orderService = {
+  mine: () => request<Order[]>('/orders'),
 };

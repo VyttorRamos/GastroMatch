@@ -1,12 +1,11 @@
 $ErrorActionPreference = 'Stop'
 $backendRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $projectRef = 'sulyzeupqmgdkgwjspzx'
-$defaultPoolerHost = 'aws-0-us-east-1.pooler.supabase.com'
 
 Write-Host 'Configure a conexão do GastroMatch com o Supabase.'
 Write-Host 'Use o host exato mostrado em Connect > ORM > Prisma > .env.local.'
-$poolerHost = Read-Host "Host do pooler [$defaultPoolerHost]"
-if ([string]::IsNullOrWhiteSpace($poolerHost)) { $poolerHost = $defaultPoolerHost }
+$poolerHost = Read-Host 'Host do pooler (copie do Supabase Connect)'
+if ([string]::IsNullOrWhiteSpace($poolerHost)) { throw 'Informe o host exibido em Supabase > Connect.' }
 if ($poolerHost -notmatch '^[A-Za-z0-9.-]+$') { throw 'Host inválido.' }
 
 $securePassword = Read-Host 'Nova senha do banco (a entrada fica oculta)' -AsSecureString
@@ -20,7 +19,7 @@ try {
 $encodedPassword = [Uri]::EscapeDataString($plainPassword)
 $plainPassword = $null
 
-$runtimeUrl = "postgresql://postgres.$projectRef`:$encodedPassword@$poolerHost`:5432/postgres"
+$runtimeUrl = "postgresql://postgres.$projectRef`:$encodedPassword@$poolerHost`:6543/postgres?pgbouncer=true"
 $schemaUrl = "postgresql://postgres.$projectRef`:$encodedPassword@$poolerHost`:5432/postgres"
 $envPath = Join-Path $backendRoot '.env'
 $lines = [System.Collections.Generic.List[string]]::new()

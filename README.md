@@ -379,7 +379,7 @@ Crie o arquivo `.env` usando `.env.example` como referência. Configure as URLs 
 Exemplo de formato — substitua os valores pelos dados do painel Supabase e nunca envie o arquivo `.env` ao Git:
 
 ```env
-DATABASE_URL="postgresql://postgres.PROJECT_REF:SENHA@HOST_DO_POOLER:5432/postgres"
+DATABASE_URL="postgresql://postgres.PROJECT_REF:SENHA@HOST_DO_POOLER:6543/postgres?pgbouncer=true"
 DIRECT_URL="postgresql://postgres.PROJECT_REF:SENHA@HOST_DO_POOLER:5432/postgres"
 JWT_SECRET="gastromatch-chave-secreta"
 JWT_EXPIRES_IN="7d"
@@ -387,7 +387,7 @@ PORT=3000
 FRONTEND_URL="http://localhost:5173"
 ```
 
-`DATABASE_URL` é usada pelo Prisma na conexão da aplicação; `DIRECT_URL` é usada para operações de schema. O exemplo do backend usa o pooler de sessão do Supabase na porta `5432`. Copie o host exato mostrado em **Connect**; não presuma que a região ou o hostname do exemplo corresponde ao seu projeto. Se a senha tiver caracteres especiais, ela precisa estar codificada para URL.
+`DATABASE_URL` usa o pooler de transação na porta `6543` para a conexão da aplicação; `DIRECT_URL` usa o pooler de sessão na porta `5432` para operações de schema. Copie o host e o usuário exatos mostrados em **Connect**. Se a senha tiver caracteres especiais, ela precisa estar codificada para URL.
 
 O script abaixo solicita o host e a senha sem exibir a senha, grava as URLs no `.env`, gera o Prisma Client e sincroniza o schema. Use-o no PowerShell:
 
