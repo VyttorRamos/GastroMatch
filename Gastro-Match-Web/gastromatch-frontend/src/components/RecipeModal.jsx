@@ -367,9 +367,9 @@ export default function RecipeModal({
                   <h3>Passo a Passo Completo & Videoaula do Chef</h3>
                   {hasAccess ? (
                     <>
-                      <p className="tab-description">
-                        {recipe.instructions || "Siga as etapas detalhadas abaixo para reproduzir a receita com fidelidade."}
-                      </p>
+                      {recipe.instructions && (
+                        <p className="tab-description">{recipe.instructions}</p>
+                      )}
 
                       {recipe.videoUrl && (
                         <div className="videoaula-card-box">
@@ -377,7 +377,6 @@ export default function RecipeModal({
                             <Icon name="video" size={18} />
                             <span>Videoaula Prática do Chef • Acesso Liberado</span>
                           </div>
-                          <p>Aprenda visualmente todos os segredos de cocção e empratamento guiado pelo chef.</p>
                           <a
                             href={recipe.videoUrl}
                             target="_blank"
@@ -389,18 +388,6 @@ export default function RecipeModal({
                         </div>
                       )}
 
-                      <div className="step-box">
-                        <h4><span className="step-num">1</span> Preparação da base & Mise en Place</h4>
-                        <p>Higienize os insumos frescos e prepare os cortes com precisão. Aqueça a panela ou frigideira em fogo brando.</p>
-                      </div>
-                      <div className="step-box">
-                        <h4><span className="step-num">2</span> Cocção e ponto correto</h4>
-                        <p>Adicione os temperos frescos na ordem recomendada pelo chef para extrair o máximo de sabor aromático.</p>
-                      </div>
-                      <div className="step-box">
-                        <h4><span className="step-num">3</span> Montagem e Empratamento</h4>
-                        <p>Finalize com o toque do chef e sirva imediatamente enquanto estiver bem aquecido.</p>
-                      </div>
                     </>
                   ) : (
                     renderPaywall("o Modo de Preparo e a Videoaula")
